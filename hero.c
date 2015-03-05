@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_log.h>
 #include <SDL2/SDL_events.h>
@@ -18,9 +19,14 @@
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_video.h>
 
+const Uint32 WIDTH = 640;
+const Uint32 HEIGHT = 480;
+const Uint32 DEPTH = 32;
+
 #define log_debug(...) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
 
 int main(int argc, char ** argv) {
+    srand(time(NULL));
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_version compiled;
@@ -57,7 +63,7 @@ int main(int argc, char ** argv) {
         "Handmade Hero",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        640, 480,
+        WIDTH, HEIGHT,
         0);
 
     SDL_Surface *surface;
@@ -78,7 +84,7 @@ int main(int argc, char ** argv) {
     amask = 0xff000000;
 #endif
 
-    surface = SDL_CreateRGBSurface(0, 640, 480, 32,
+    surface = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, DEPTH,
                                    rmask, gmask, bmask, amask);
     screenSurface = SDL_GetWindowSurface(window);
 
@@ -87,8 +93,7 @@ int main(int argc, char ** argv) {
         exit(1);
     }
 
-
-
+    log_debug("surface->pitch: %d", surface->pitch);
 
     while(1) {
         SDL_Event e;
@@ -99,8 +104,30 @@ int main(int argc, char ** argv) {
             }
         }
 
-        //SDL_Delay(10);
+        // Direct access to surface->pixels
         SDL_LockSurface(surface);
+
+        for (int y = 0; y < HEIGHT ; y++) {
+                Uint8 R = (rand()) % 0xff;
+                Uint8 G = (rand()) % 0xff;
+                Uint8 B = (rand()) % 0xff;
+                Uint32 color = (0xff << 24)
+                                | ((B & (0xff)) << 16)
+                                | ((G & (0xff)) << 8)
+                                | ((R & 0xff));
+            for (int x = 0; x < WIDTH ; x++) {
+
+                Uint8* pixel = (Uint8 *) surface->pixels;
+
+                pixel += (y * surface->pitch) + (x * sizeof(Uint32));
+                /*log_debug("x,y: %d,%d; color=%x, pixel=%p", x, y, color, pixel);*/
+                *((Uint32*) pixel) = color;
+            }
+                log_debug("color = 0x%x", color);
+        }
+
+        SDL_Delay(50);
+        // End direct access to pixels
         SDL_UnlockSurface(surface);
         SDL_BlitSurface(surface, NULL, screenSurface, NULL);
         SDL_UpdateWindowSurface(window);
@@ -112,5 +139,14 @@ int main(int argc, char ** argv) {
 
     SDL_Quit();
     return 0;
+}
+
+void Hero_PutPixel(SDL_Surface *surface,
+    const Uint32 x, const Uint32 y, const Uint32 color) {
+
+    Uint8* pixel = (Uint8 *) surface->pixels;
+    pixel += (y * surface->pitch) + (x * sizeof(Uint32));
+    /*log_debug("x,y: %d,%d; pixel=%p", x, y, pixel);*/
+    *((Uint32*) pixel) = color;
 }
 
