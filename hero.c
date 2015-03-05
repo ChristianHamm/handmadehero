@@ -73,32 +73,88 @@ int main(int argc, char ** argv) {
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
         WIDTH, HEIGHT,
-        0);
+        SDL_WINDOW_RESIZABLE);
 
     SDL_Surface *screenSurface;
     screenSurface = SDL_GetWindowSurface(window);
 
     Uint32 frame_step = 0;
 
-    while(1) {
+    int running = 1;
+
+    while(running) {
         Uint64 perf_freq = SDL_GetPerformanceFrequency();
         Uint64 perf_counter_start = SDL_GetPerformanceCounter();
 
+        SDL_Event event;
 
-        SDL_Event e;
+        if (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = 0;
+            }
 
-        if (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT) {
-                break;
+            if (event.type == SDL_WINDOWEVENT) {
+                switch (event.window.event) {
+                case SDL_WINDOWEVENT_SHOWN:
+                    SDL_Log("Window %d shown", event.window.windowID);
+                    break;
+                case SDL_WINDOWEVENT_HIDDEN:
+                    SDL_Log("Window %d hidden", event.window.windowID);
+                    break;
+                case SDL_WINDOWEVENT_EXPOSED:
+                    SDL_Log("Window %d exposed", event.window.windowID);
+                    break;
+                case SDL_WINDOWEVENT_MOVED:
+                    SDL_Log("Window %d moved to %d,%d",
+                            event.window.windowID, event.window.data1,
+                            event.window.data2);
+                    break;
+                case SDL_WINDOWEVENT_RESIZED:
+                    SDL_Log("Window %d resized to %dx%d",
+                            event.window.windowID, event.window.data1,
+                            event.window.data2);
+                    screenSurface = SDL_GetWindowSurface(window);
+                    break;
+                case SDL_WINDOWEVENT_MINIMIZED:
+                    SDL_Log("Window %d minimized", event.window.windowID);
+                    break;
+                case SDL_WINDOWEVENT_MAXIMIZED:
+                    SDL_Log("Window %d maximized", event.window.windowID);
+                    break;
+                case SDL_WINDOWEVENT_RESTORED:
+                    SDL_Log("Window %d restored", event.window.windowID);
+                    break;
+                case SDL_WINDOWEVENT_ENTER:
+                    SDL_Log("Mouse entered window %d",
+                            event.window.windowID);
+                    break;
+                case SDL_WINDOWEVENT_LEAVE:
+                    SDL_Log("Mouse left window %d", event.window.windowID);
+                    break;
+                case SDL_WINDOWEVENT_FOCUS_GAINED:
+                    SDL_Log("Window %d gained keyboard focus",
+                            event.window.windowID);
+                    break;
+                case SDL_WINDOWEVENT_FOCUS_LOST:
+                    SDL_Log("Window %d lost keyboard focus",
+                            event.window.windowID);
+                    break;
+                case SDL_WINDOWEVENT_CLOSE:
+                    SDL_Log("Window %d closed", event.window.windowID);
+                    break;
+                default:
+                    SDL_Log("Window %d got unknown event %d",
+                            event.window.windowID, event.window.event);
+                    break;
+                }
             }
         }
 
         // Direct access to surface->pixels
         SDL_LockSurface(screenSurface);
 
-
-        for (int y = 0; y < HEIGHT ; y++) {
-            for (int x = 0; x < WIDTH ; x++) {
+        for (int y = 0; y < screenSurface->h ; y++) {
+            for (int x = 0; x < screenSurface->w ; x++) {
                 Uint32 number = y + frame_step;
                 //Uint32 number = rand();
                 Uint8 R = (x) % 256;
@@ -108,9 +164,9 @@ int main(int argc, char ** argv) {
                                 | ((B & (0xff)) << 16)
                                 | ((G & (0xff)) << 8)
                                 | ((R & 0xff));
-                Hero_PutPixel(screenSurface, (x - frame_step) % WIDTH, y, color);
+                Hero_PutPixel(screenSurface,
+                    (x - frame_step) % screenSurface->w, y, color);
             }
-                //log_debug("color = 0x%x", color);
         }
 
         frame_step++;
@@ -124,7 +180,6 @@ int main(int argc, char ** argv) {
 
         if((frame_step % 100) == 0)
             log_debug("Frame time %d: %f", frame_step, perf_per_frame);
-        //SDL_Delay(1);
     }
 
     SDL_FreeSurface(screenSurface);
