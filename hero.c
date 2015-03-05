@@ -25,6 +25,15 @@ const Uint32 DEPTH = 32;
 
 #define log_debug(...) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
 
+void Hero_PutPixel(SDL_Surface *surface,
+    const Uint32 x, const Uint32 y, const Uint32 color) {
+
+    Uint8* pixel = (Uint8 *) surface->pixels;
+    pixel += (y * surface->pitch) + (x * sizeof(Uint32));
+    /*log_debug("x,y: %d,%d; pixel=%p", x, y, pixel);*/
+    *((Uint32*) pixel) = color;
+}
+
 int main(int argc, char ** argv) {
     srand(time(NULL));
     SDL_Init(SDL_INIT_VIDEO);
@@ -66,36 +75,16 @@ int main(int argc, char ** argv) {
         WIDTH, HEIGHT,
         0);
 
-    SDL_Surface *surface;
     SDL_Surface *screenSurface;
-    Uint32 rmask, gmask, bmask, amask;
-
-    /* SDL interprets each pixel as a 32-bit number, so our masks must depend
-       on the endianness (byte order) of the machine */
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    rmask = 0xff000000;
-    gmask = 0x00ff0000;
-    bmask = 0x0000ff00;
-    amask = 0x000000ff;
-#else
-    rmask = 0x000000ff;
-    gmask = 0x0000ff00;
-    bmask = 0x00ff0000;
-    amask = 0xff000000;
-#endif
-
-    surface = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, DEPTH,
-                                   rmask, gmask, bmask, amask);
     screenSurface = SDL_GetWindowSurface(window);
 
-    if(surface == NULL) {
-        log_debug("CreateRGBSurface failed: %s\n", SDL_GetError());
-        exit(1);
-    }
-
-    log_debug("surface->pitch: %d", surface->pitch);
+    Uint32 frame_step = 0;
 
     while(1) {
+        Uint64 perf_freq = SDL_GetPerformanceFrequency();
+        Uint64 perf_counter_start = SDL_GetPerformanceCounter();
+
+
         SDL_Event e;
 
         if (SDL_PollEvent(&e)) {
@@ -105,48 +94,43 @@ int main(int argc, char ** argv) {
         }
 
         // Direct access to surface->pixels
-        SDL_LockSurface(surface);
+        SDL_LockSurface(screenSurface);
+
 
         for (int y = 0; y < HEIGHT ; y++) {
-                Uint8 R = (rand()) % 0xff;
-                Uint8 G = (rand()) % 0xff;
-                Uint8 B = (rand()) % 0xff;
-                Uint32 color = (0xff << 24)
+            for (int x = 0; x < WIDTH ; x++) {
+                Uint32 number = y + frame_step;
+                //Uint32 number = rand();
+                Uint8 R = (x) % 256;
+                Uint8 G = (x) % 256;
+                Uint8 B = (number) % 256;
+                Uint32 color = (0x06 << 24)
                                 | ((B & (0xff)) << 16)
                                 | ((G & (0xff)) << 8)
                                 | ((R & 0xff));
-            for (int x = 0; x < WIDTH ; x++) {
-
-                Uint8* pixel = (Uint8 *) surface->pixels;
-
-                pixel += (y * surface->pitch) + (x * sizeof(Uint32));
-                /*log_debug("x,y: %d,%d; color=%x, pixel=%p", x, y, color, pixel);*/
-                *((Uint32*) pixel) = color;
+                Hero_PutPixel(screenSurface, (x - frame_step) % WIDTH, y, color);
             }
-                log_debug("color = 0x%x", color);
+                //log_debug("color = 0x%x", color);
         }
 
-        SDL_Delay(50);
+        frame_step++;
+
         // End direct access to pixels
-        SDL_UnlockSurface(surface);
-        SDL_BlitSurface(surface, NULL, screenSurface, NULL);
+        SDL_UnlockSurface(screenSurface);
         SDL_UpdateWindowSurface(window);
+        Uint64 perf_counter_end = SDL_GetPerformanceCounter();
+        Uint64 perf_counter_elapsed = perf_counter_end - perf_counter_start;
+        double perf_per_frame = (((1000.0f * (double)perf_counter_elapsed) / (double)perf_freq));
+
+        if((frame_step % 100) == 0)
+            log_debug("Frame time %d: %f", frame_step, perf_per_frame);
+        //SDL_Delay(1);
     }
 
-    SDL_FreeSurface(surface);
     SDL_FreeSurface(screenSurface);
     SDL_DestroyWindow(window);
 
     SDL_Quit();
     return 0;
-}
-
-void Hero_PutPixel(SDL_Surface *surface,
-    const Uint32 x, const Uint32 y, const Uint32 color) {
-
-    Uint8* pixel = (Uint8 *) surface->pixels;
-    pixel += (y * surface->pitch) + (x * sizeof(Uint32));
-    /*log_debug("x,y: %d,%d; pixel=%p", x, y, pixel);*/
-    *((Uint32*) pixel) = color;
 }
 
