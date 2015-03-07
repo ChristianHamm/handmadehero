@@ -28,6 +28,9 @@ const Uint32 DEPTH = 32;
 
 static SDL_Texture* texture;
 static void* pixels;
+static Uint32 pixelHeight;
+static Uint32 pixelWidth;
+static const Uint32 bytesPerPixel = 4;
 
 void Hero_PutPixel(void *pixels, int pitch,
     const Uint32 x, const Uint32 y, const Uint32 color) {
@@ -37,22 +40,37 @@ void Hero_PutPixel(void *pixels, int pitch,
     *((Uint32*) pixel) = color;
 }
 
-void Hero_ResizeTexture(SDL_Renderer* renderer, int width, int height) {
+void Hero_ResizeTexture(SDL_Renderer* renderer, Uint32 width, Uint32 height) {
+    /*
     if(pixels)
         pixels = realloc(pixels, width * height * 4);
     else
         pixels = malloc(width * height * 4);
+    */
 
-    memset(pixels, 0xff, width * height * 4);
+    // Clear _old_ pixel width and height
+    if(pixels)
+        munmap(pixels, pixelWidth * pixelHeight * bytesPerPixel);
 
     if(texture)
         SDL_DestroyTexture(texture);
 
-    texture = SDL_CreateTexture(renderer,
-                                         SDL_PIXELFORMAT_ARGB8888,
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
                                          SDL_TEXTUREACCESS_STREAMING,
                                          width,
                                          height);
+
+    // Set new pixel width and height
+    pixelHeight = height;
+    pixelWidth = width;
+
+    pixels = mmap(0, pixelWidth * pixelHeight * bytesPerPixel,
+        PROT_READ | PROT_WRITE,
+        MAP_PRIVATE | MAP_ANON,
+        -1, 0);
+
+    memset(pixels, 0xff, pixelWidth * pixelHeight * bytesPerPixel);
+
 }
 
 void Hero_DrawGradient(int window_w, int window_h, int frame_step) {
@@ -71,6 +89,17 @@ void Hero_DrawGradient(int window_w, int window_h, int frame_step) {
                     (x - frame_step) % window_w, y, color);
             }
         }
+}
+
+void Hero_UpdateGraphics(SDL_Renderer *renderer) {
+    if(pixels)
+        if (SDL_UpdateTexture(texture, 0, pixels, pixelWidth * 4)) {
+            log_debug("Could not update texture!");
+            exit(-1);
+        }
+
+    SDL_RenderCopy(renderer, texture, 0, 0);
+    SDL_RenderPresent(renderer);
 }
 
 int main(int argc, char ** argv) {
@@ -125,6 +154,9 @@ int main(int argc, char ** argv) {
     Uint32 frame_step = 0;
     int running = 1;
 
+    // Initially set the pixel buffer dimensions
+    pixelWidth = window_w;
+    pixelHeight = window_h;
     Hero_ResizeTexture(renderer, window_w, window_h);
 
     while(running) {
@@ -141,26 +173,36 @@ int main(int argc, char ** argv) {
 
             if (event.type == SDL_WINDOWEVENT) {
                 switch (event.window.event) {
+                    /*
                 case SDL_WINDOWEVENT_SHOWN:
                     SDL_Log("Window %d shown", event.window.windowID);
                     break;
                 case SDL_WINDOWEVENT_HIDDEN:
                     SDL_Log("Window %d hidden", event.window.windowID);
                     break;
+                    */
                 case SDL_WINDOWEVENT_EXPOSED:
                     SDL_Log("Window %d exposed", event.window.windowID);
+                    SDL_GetWindowSize(window, &window_w, &window_h);
+                    Hero_UpdateGraphics(renderer);
                     break;
+                    /*
                 case SDL_WINDOWEVENT_MOVED:
                     SDL_Log("Window %d moved to %d,%d",
                             event.window.windowID, event.window.data1,
                             event.window.data2);
+                    SDL_GetWindowSize(window, &window_w, &window_h);
+                    Hero_ResizeTexture(renderer, event.window.data1, event.window.data2);
                     break;
+                    */
                 case SDL_WINDOWEVENT_RESIZED:
                     SDL_Log("Window %d resized to %dx%d",
                             event.window.windowID, event.window.data1,
                             event.window.data2);
-                    Hero_ResizeTexture(renderer, window_w, window_h);
+                    SDL_GetWindowSize(window, &window_w, &window_h);
+                    Hero_ResizeTexture(renderer, event.window.data1, event.window.data2);
                     break;
+                    /*
                 case SDL_WINDOWEVENT_MINIMIZED:
                     SDL_Log("Window %d minimized", event.window.windowID);
                     break;
@@ -192,6 +234,7 @@ int main(int argc, char ** argv) {
                     SDL_Log("Window %d got unknown event %d",
                             event.window.windowID, event.window.event);
                     break;
+                    */
                 }
             }
         }
@@ -206,7 +249,7 @@ int main(int argc, char ** argv) {
                 Uint8 R = (x) % 256;
                 Uint8 G = (x) % 256;
                 Uint8 B = (number) % 256;
-                Uint32 color = (0x06 << 24)
+                Uint32 color = (0xff << 24)
                                 | ((B & (0xff)) << 16)
                                 | ((G & (0xff)) << 8)
                                 | ((R & 0xff));
@@ -216,15 +259,7 @@ int main(int argc, char ** argv) {
         }
         */
 
-        SDL_RenderClear(renderer);
-        if (SDL_UpdateTexture(texture, 0, pixels, window_w * 4)) {
-            log_debug("Could not update texture!");
-            running = 0;
-        }
-
-        // End direct access to pixels
-        SDL_RenderCopy(renderer, texture, 0, 0);
-        SDL_RenderPresent(renderer);
+        Hero_UpdateGraphics(renderer);
 
         // Performance
         Uint64 perf_counter_end = SDL_GetPerformanceCounter();
@@ -236,9 +271,6 @@ int main(int argc, char ** argv) {
 
         frame_step++;
     }
-
-    if(pixels)
-        free(pixels);
 
     if(texture)
         SDL_DestroyTexture(texture);
