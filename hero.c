@@ -238,6 +238,7 @@ int main(int argc, char ** argv) {
         Uint64 perf_freq = SDL_GetPerformanceFrequency();
         Uint64 perf_counter_start = SDL_GetPerformanceCounter();
 
+        // Actual game stuff
         running = Hero_HandleEvents();
         Hero_DrawGradient(frame_step);
         Hero_UpdateGraphics(renderer);
