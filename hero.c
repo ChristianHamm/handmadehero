@@ -18,6 +18,7 @@
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_video.h>
+#include <SDL2/SDL_audio.h>
 
 const Uint32 WIDTH = 640;
 const Uint32 HEIGHT = 480;
@@ -30,6 +31,10 @@ static void* pixelBuffer;
 static Uint32 pixelBufferHeight;
 static Uint32 pixelBufferWidth;
 static const Uint32 bytesPerPixel = 4;
+
+static SDL_AudioSpec desiredAudioSpec, audioSpec;
+static SDL_AudioDeviceID audioDevice;
+static char* audioDeviceName;
 
 void Hero_PutPixel(void *pixelBuffer, int pitch,
     const Uint32 x, const Uint32 y, const Uint32 color) {
@@ -204,11 +209,40 @@ void Hero_PrintSDLVersion() {
     }
 }
 
+void Hero_AudioCallback(void*  userdata, Uint8* stream, int len) {
+    log_debug("Playing %d bytes", len);
+    SDL_memset(stream, 0x0, len);  // just silence.
+    log_debug("The audio callback is done!\n");
+}
+
 int main(int argc, char ** argv) {
     // Init stuff
     srand(time(NULL));
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     Hero_PrintSDLVersion();
+
+    // Audio stuff
+    SDL_zero(desiredAudioSpec);
+    desiredAudioSpec.freq = 48000;
+    desiredAudioSpec.format = AUDIO_S16SYS;
+    desiredAudioSpec.channels = 2;
+    desiredAudioSpec.samples = 2048;
+    desiredAudioSpec.callback = Hero_AudioCallback;
+    //desiredAudioSpec.userdata = ;
+
+    audioDevice = SDL_OpenAudioDevice(audioDeviceName, 0,
+        &desiredAudioSpec, &audioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
+
+    if (audioDevice == 0) {
+        log_debug("Failed to open audio: %s\n", SDL_GetError());
+    } else {
+        log_debug("Opened audio device %s", audioDeviceName);
+        if (audioSpec.format != desiredAudioSpec.format)
+            log_debug("Could not get desired audio format.\n");
+        SDL_PauseAudioDevice(audioDevice, 0);
+        //SDL_Delay(5000);
+        SDL_CloseAudio();
+    }
 
     // Create the window and renderer
     SDL_Window* window = SDL_CreateWindow(
