@@ -214,38 +214,6 @@ void Hero_PrintSDLVersion() {
     }
 }
 
-/*
-void Hero_AudioCallback(void*  userdata, Uint8* stream, int len) {
-    log_debug("Playing %d bytes", len);
-    //stream = malloc(len * sizeof(Uint8));
-
-    SDL_memset(stream, 0, len);
-
-    for (int x = 0; x < len; x += 2) {
-        Uint8* sbyte = (Uint8 *) stream;
-        sbyte += x * sizeof(Uint8);
-
-        if (x % 2) {
-            *sbyte = 0;
-            sbyte++;
-            *sbyte = 1;
-        }
-        else {
-            *sbyte = 0;
-            sbyte++;
-            *sbyte = -1;
-        }
-    }
-
-
-    //log_debug("The audio callback is done!\n");
-    //
-    // amplitude * sin(2.0 * pi * f * f / framerate)
-
-    //free(stream);
-}
-*/
-
 int main(int argc, char ** argv) {
     // Init stuff
     srand(time(NULL));
@@ -255,7 +223,7 @@ int main(int argc, char ** argv) {
     // Audio stuff
     Uint32 frame_step = 0;
     Uint32 audio_step = 0;
-    Uint32 tone_hz = 440;
+    Uint32 tone_hz = 220;
     Sint16 tone_volume = 3000;
     Uint32 square_wave_period = AUDIO_FREQ / tone_hz;
     Uint32 half_square_wave_period = square_wave_period / 2;
@@ -268,8 +236,6 @@ int main(int argc, char ** argv) {
     desiredAudioSpec.channels = AUDIO_CHANNELS;
     //desiredAudioSpec.samples = 4096;
     desiredAudioSpec.samples = AUDIO_FREQ * bytes_per_sample / AUDIO_FRAMERATE;
-    //desiredAudioSpec.callback = Hero_AudioCallback;
-    //desiredAudioSpec.userdata = ;
 
     audioDevice = SDL_OpenAudioDevice(audioDeviceName, 0,
         &desiredAudioSpec, &audioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
@@ -281,10 +247,6 @@ int main(int argc, char ** argv) {
 
         if (audioSpec.format != desiredAudioSpec.format)
             log_debug("Could not get desired audio format.\n");
-
-        //SDL_PauseAudioDevice(audioDevice, 0);
-        //SDL_Delay(5000);
-        //SDL_CloseAudio();
     }
 
     // Create the window and renderer
