@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 #include <sys/mman.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_log.h>
@@ -20,11 +21,15 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
 
+#define log_debug(...) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
+
 const Uint32 WIDTH = 640;
 const Uint32 HEIGHT = 480;
 const Uint32 DEPTH = 32;
 
-#define log_debug(...) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
+const Uint32 AUDIO_FREQ = 48000;
+const Uint32 AUDIO_FRAMERATE = 60;
+const Uint32 AUDIO_CHANNELS = 2;
 
 static SDL_Texture* texture;
 static void* pixelBuffer;
@@ -209,11 +214,37 @@ void Hero_PrintSDLVersion() {
     }
 }
 
+/*
 void Hero_AudioCallback(void*  userdata, Uint8* stream, int len) {
     log_debug("Playing %d bytes", len);
-    SDL_memset(stream, 0x0, len);  // just silence.
-    log_debug("The audio callback is done!\n");
+    //stream = malloc(len * sizeof(Uint8));
+
+    SDL_memset(stream, 0, len);
+
+    for (int x = 0; x < len; x += 2) {
+        Uint8* sbyte = (Uint8 *) stream;
+        sbyte += x * sizeof(Uint8);
+
+        if (x % 2) {
+            *sbyte = 0;
+            sbyte++;
+            *sbyte = 1;
+        }
+        else {
+            *sbyte = 0;
+            sbyte++;
+            *sbyte = -1;
+        }
+    }
+
+
+    //log_debug("The audio callback is done!\n");
+    //
+    // amplitude * sin(2.0 * pi * f * f / framerate)
+
+    //free(stream);
 }
+*/
 
 int main(int argc, char ** argv) {
     // Init stuff
@@ -222,12 +253,22 @@ int main(int argc, char ** argv) {
     Hero_PrintSDLVersion();
 
     // Audio stuff
+    Uint32 frame_step = 0;
+    Uint32 audio_step = 0;
+    Uint32 tone_hz = 440;
+    Sint16 tone_volume = 3000;
+    Uint32 square_wave_period = AUDIO_FREQ / tone_hz;
+    Uint32 half_square_wave_period = square_wave_period / 2;
+    Uint32 bytes_per_sample = sizeof(Sint16) * 2;
+    int sound_is_playing = 0;
+
     SDL_zero(desiredAudioSpec);
-    desiredAudioSpec.freq = 48000;
-    desiredAudioSpec.format = AUDIO_S16SYS;
-    desiredAudioSpec.channels = 2;
-    desiredAudioSpec.samples = 2048;
-    desiredAudioSpec.callback = Hero_AudioCallback;
+    desiredAudioSpec.freq = AUDIO_FREQ;
+    desiredAudioSpec.format = AUDIO_S16LSB;
+    desiredAudioSpec.channels = AUDIO_CHANNELS;
+    //desiredAudioSpec.samples = 4096;
+    desiredAudioSpec.samples = AUDIO_FREQ * bytes_per_sample / AUDIO_FRAMERATE;
+    //desiredAudioSpec.callback = Hero_AudioCallback;
     //desiredAudioSpec.userdata = ;
 
     audioDevice = SDL_OpenAudioDevice(audioDeviceName, 0,
@@ -237,11 +278,13 @@ int main(int argc, char ** argv) {
         log_debug("Failed to open audio: %s\n", SDL_GetError());
     } else {
         log_debug("Opened audio device %s", audioDeviceName);
+
         if (audioSpec.format != desiredAudioSpec.format)
             log_debug("Could not get desired audio format.\n");
-        SDL_PauseAudioDevice(audioDevice, 0);
+
+        //SDL_PauseAudioDevice(audioDevice, 0);
         //SDL_Delay(5000);
-        SDL_CloseAudio();
+        //SDL_CloseAudio();
     }
 
     // Create the window and renderer
@@ -264,7 +307,6 @@ int main(int argc, char ** argv) {
     Hero_ResizeTexture(renderer, window_w, window_h);
 
     // Loop things
-    Uint32 frame_step = 0;
     int running = 1;
 
     while(running) {
@@ -276,6 +318,30 @@ int main(int argc, char ** argv) {
         running = Hero_HandleEvents();
         Hero_DrawGradient(frame_step);
         Hero_UpdateGraphics(renderer);
+
+        // Playing test sound
+        Uint32 target_queue_bytes = AUDIO_FREQ * bytes_per_sample;
+        Uint32 bytes_to_write = target_queue_bytes - SDL_GetQueuedAudioSize(audioDevice);
+
+        if(bytes_to_write) {
+            void* sound_buffer = malloc(bytes_to_write);
+            Sint16* sample_out = (Sint16*)sound_buffer;
+            Uint32 sample_count = bytes_to_write / bytes_per_sample;
+
+            for(Uint32 i = 0; i < sample_count; ++i) {
+                Sint16 sample_value = ((audio_step++ / half_square_wave_period) % 2)
+                    ? tone_volume : -tone_volume;
+                *sample_out++ = sample_value;
+                *sample_out++ = sample_value;
+            }
+            SDL_QueueAudio(audioDevice, sound_buffer, bytes_to_write);
+            free(sound_buffer);
+        }
+
+        if(!sound_is_playing) {
+            SDL_PauseAudioDevice(audioDevice, 0);
+            sound_is_playing = 1;
+        }
 
         // Performance
         Uint64 perf_counter_end = SDL_GetPerformanceCounter();
