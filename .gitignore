@@ -1,4 +1,5 @@
 hero
 *.dSYM
+.DS_Store
 tags
 attic/*
