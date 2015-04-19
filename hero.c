@@ -16,7 +16,7 @@
 
 const Uint32 WIDTH = 640;
 const Uint32 HEIGHT = 480;
-const Uint32 DEPTH = 32;
+//const Uint32 DEPTH = 32;
 
 const Uint16 AUDIO_FREQ = 48000;
 const Uint16 AUDIO_FRAMERATE = 60;
@@ -81,7 +81,7 @@ void Hero_DrawGradient(int frame_step) {
                                      | ((G & (0xff)) << 8)
                                      | ((R & 0xff)));
             Hero_PutPixel(pixelBuffer, pixelBufferWidth * 4,
-                          (x - frame_step) % pixelBufferWidth, y, color);
+                          (x - frame_step) % pixelBufferWidth, (Uint32 const) y, color);
         }
     }
 }
