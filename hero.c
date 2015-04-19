@@ -14,65 +14,68 @@
 
 #define log_debug(...) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
 
-const Uint32 WIDTH = 640;
-const Uint32 HEIGHT = 480;
-//const Uint32 DEPTH = 32;
+const Uint32 k_window_width = 960;
+const Uint32 k_window_height = 540;
+//const Uint32 k_display_fps = 30;
 
-const Uint16 AUDIO_FREQ = 48000;
-const Uint16 AUDIO_FRAMERATE = 60;
-const Uint16 AUDIO_CHANNELS = 2;
+const Uint16 k_audio_freq = 48000;
+const Uint16 k_audio_rate = 60;
+const Uint16 k_audio_channels = 2;
 
-static SDL_Texture *texture;
-static void *pixelBuffer;
-static Uint32 pixelBufferHeight;
-static Uint32 pixelBufferWidth;
-static const Uint32 bytesPerPixel = 4;
+const Sint16 k_audio_bytes_per_sample = sizeof(Sint16) * 2;
 
-static SDL_AudioSpec desiredAudioSpec, audioSpec;
-static SDL_AudioDeviceID audioDevice;
-static char *audioDeviceName;
+static SDL_Texture *g_texture;
+static void *g_pixel_buffer;
+static Uint32 g_pixel_buffer_height;
+static Uint32 g_pixel_buffer_width;
+static const Uint32 k_bytes_per_pixel = 4;
 
-void Hero_PutPixel(void *pixelBuffer, int pitch,
+static SDL_AudioSpec g_desired_audio_spec, g_audio_spec;
+static SDL_AudioDeviceID g_audio_device;
+static char *g_audio_device_name;
+
+void Hero_PutPixel(void *pixel_buffer, int pitch,
                    const Uint32 x, const Uint32 y, const Uint32 color) {
 
-    Uint8 *pixel = (Uint8 *) pixelBuffer;
+    Uint8 *pixel = (Uint8 *) pixel_buffer;
     pixel += (y * pitch) + (x * sizeof(Uint32));
     *((Uint32 *) pixel) = color;
 }
 
 void Hero_ResizeTexture(SDL_Renderer *renderer, Uint32 width, Uint32 height) {
     // Clear _old_ pixel width and height
-    if (pixelBuffer)
-        munmap(pixelBuffer,
-               pixelBufferWidth * pixelBufferHeight * bytesPerPixel);
+    if (g_pixel_buffer)
+        munmap(g_pixel_buffer,
+               g_pixel_buffer_width * g_pixel_buffer_height * k_bytes_per_pixel);
 
-    if (texture)
-        SDL_DestroyTexture(texture);
+    if (g_texture)
+        SDL_DestroyTexture(g_texture);
 
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
-                                SDL_TEXTUREACCESS_STREAMING,
-                                width,
-                                height);
+    g_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
+                                  SDL_TEXTUREACCESS_STREAMING,
+                                  width,
+                                  height);
 
     // Set new pixel width and height
-    pixelBufferHeight = height;
-    pixelBufferWidth = width;
+    g_pixel_buffer_height = height;
+    g_pixel_buffer_width = width;
 
-    pixelBuffer = mmap(0, pixelBufferWidth * pixelBufferHeight * bytesPerPixel,
-                       PROT_READ | PROT_WRITE,
-                       MAP_PRIVATE | MAP_ANON,
-                       -1, 0);
+    g_pixel_buffer = mmap(0, g_pixel_buffer_width * g_pixel_buffer_height *
+                                                    k_bytes_per_pixel,
+                          PROT_READ | PROT_WRITE,
+                          MAP_PRIVATE | MAP_ANON,
+                          -1, 0);
 
-    memset(pixelBuffer, 0xff,
-           pixelBufferWidth * pixelBufferHeight * bytesPerPixel);
+    memset(g_pixel_buffer, 0xff,
+           g_pixel_buffer_width * g_pixel_buffer_height * k_bytes_per_pixel);
 
 }
 
 void Hero_DrawGradient(int frame_step) {
-    for (int y = 0; y < pixelBufferHeight; y++) {
-        for (int x = 0; x < pixelBufferWidth; x++) {
+    for (int y = 0; y < g_pixel_buffer_height; y++) {
+        for (int x = 0; x < g_pixel_buffer_width; x++) {
             Uint32 number = (Uint32) (y + frame_step);
-            //Uint32 number = rand();
+            //Uint32 number = (Uint32) rand();
             Uint8 R = (Uint8) ((x) % 256);
             Uint8 G = (Uint8) ((x) % 256);
             Uint8 B = (Uint8) ((number) % 256);
@@ -80,20 +83,22 @@ void Hero_DrawGradient(int frame_step) {
                                      | ((B & (0xff)) << 16)
                                      | ((G & (0xff)) << 8)
                                      | ((R & 0xff)));
-            Hero_PutPixel(pixelBuffer, pixelBufferWidth * 4,
-                          (x - frame_step) % pixelBufferWidth, (Uint32 const) y, color);
+            Hero_PutPixel(g_pixel_buffer, g_pixel_buffer_width * 4,
+                          (x - frame_step) % g_pixel_buffer_width,
+                          (Uint32 const) y,
+                          color);
         }
     }
 }
 
 void Hero_UpdateGraphics(SDL_Renderer *renderer) {
-    if (pixelBuffer) if (SDL_UpdateTexture(texture, 0, pixelBuffer,
-                                           pixelBufferWidth * 4)) {
-        log_debug("Could not update texture!");
+    if (g_pixel_buffer) if (SDL_UpdateTexture(g_texture, 0, g_pixel_buffer,
+                                              g_pixel_buffer_width * 4)) {
+        log_debug("Could not update g_texture!");
         exit(-1);
     }
 
-    SDL_RenderCopy(renderer, texture, 0, 0);
+    SDL_RenderCopy(renderer, g_texture, 0, 0);
     SDL_RenderPresent(renderer);
 };
 
@@ -110,25 +115,10 @@ int Hero_HandleEvents() {
             SDL_Window *window = SDL_GetWindowFromID(event.window.windowID);
             SDL_Renderer *renderer = SDL_GetRenderer(window);
             switch (event.window.event) {
-                /*
-            case SDL_WINDOWEVENT_SHOWN:
-                SDL_Log("Window %d shown", event.window.windowID);
-                break;
-            case SDL_WINDOWEVENT_HIDDEN:
-                SDL_Log("Window %d hidden", event.window.windowID);
-                break;
-                */
                 case SDL_WINDOWEVENT_EXPOSED:
                     SDL_Log("Window %d exposed", event.window.windowID);
                     Hero_UpdateGraphics(renderer);
                     break;
-                    /*
-                case SDL_WINDOWEVENT_MOVED:
-                    SDL_Log("Window %d moved to %d,%d",
-                            event.window.windowID, event.window.data1,
-                            event.window.data2);
-                    break;
-                    */
                 case SDL_WINDOWEVENT_RESIZED:
                     SDL_Log("Window %d resized to %dx%d",
                             event.window.windowID, event.window.data1,
@@ -136,38 +126,12 @@ int Hero_HandleEvents() {
                     Hero_ResizeTexture(renderer, (Uint32) event.window.data1,
                                        (Uint32) event.window.data2);
                     break;
-                    /*
-                case SDL_WINDOWEVENT_MINIMIZED:
-                    SDL_Log("Window %d minimized", event.window.windowID);
-                    break;
-                case SDL_WINDOWEVENT_MAXIMIZED:
-                    SDL_Log("Window %d maximized", event.window.windowID);
-                    break;
-                case SDL_WINDOWEVENT_RESTORED:
-                    SDL_Log("Window %d restored", event.window.windowID);
-                    break;
-                case SDL_WINDOWEVENT_ENTER:
-                    SDL_Log("Mouse entered window %d",
-                            event.window.windowID);
-                    break;
-                case SDL_WINDOWEVENT_LEAVE:
-                    SDL_Log("Mouse left window %d", event.window.windowID);
-                    break;
-                case SDL_WINDOWEVENT_FOCUS_GAINED:
-                    SDL_Log("Window %d gained keyboard focus",
-                            event.window.windowID);
-                    break;
-                case SDL_WINDOWEVENT_FOCUS_LOST:
-                    SDL_Log("Window %d lost keyboard focus",
-                            event.window.windowID);
-                    break;
-                case SDL_WINDOWEVENT_CLOSE:
-                    SDL_Log("Window %d closed", event.window.windowID);
-                    break;
-                    */
+
                 default:
+                    /*
                     SDL_Log("Window %d got unknown event %d",
                             event.window.windowID, event.window.event);
+                    */
                     break;
             }
         }
@@ -208,6 +172,56 @@ void Hero_PrintSDLVersion() {
     }
 }
 
+void Hero_PlayTestSound(Uint32 audio_step) {
+    Uint32 tone_hz = 440;
+    Sint16 tone_volume = 3000;
+    Uint32 square_wave_period = k_audio_freq / tone_hz;
+    Uint32 half_square_wave_period = square_wave_period / 2;
+
+    Uint32 target_queue_bytes = k_audio_freq * k_audio_bytes_per_sample;
+    Uint32 bytes_to_write =
+            target_queue_bytes - SDL_GetQueuedAudioSize(g_audio_device);
+
+    if (bytes_to_write) {
+        void *sound_buffer = malloc(bytes_to_write);
+        Sint16 *sample_out = (Sint16 *) sound_buffer;
+        Uint32 sample_count = bytes_to_write / k_audio_bytes_per_sample;
+
+        for (Uint32 i = 0; i < sample_count; ++i) {
+            Sint16 sample_value = ((audio_step++ /
+                                    half_square_wave_period) % 2)
+                                  ? tone_volume : -tone_volume;
+            *sample_out++ = sample_value;
+            *sample_out++ = sample_value;
+        }
+        SDL_QueueAudio(g_audio_device, sound_buffer, bytes_to_write);
+        free(sound_buffer);
+    }
+}
+
+void Hero_InitAudio() {
+    SDL_zero(g_desired_audio_spec);
+    g_desired_audio_spec.freq = k_audio_freq;
+    g_desired_audio_spec.format = AUDIO_S16LSB;
+    g_desired_audio_spec.channels = k_audio_channels;
+    //g_desired_audio_spec.samples = 4096;
+    g_desired_audio_spec.samples = (k_audio_freq * k_audio_bytes_per_sample /
+                                                 k_audio_rate);
+
+    g_audio_device = SDL_OpenAudioDevice(g_audio_device_name, 0,
+                                        &g_desired_audio_spec, &g_audio_spec,
+                                        SDL_AUDIO_ALLOW_ANY_CHANGE);
+
+    if (g_audio_device == 0) {
+        log_debug("Failed to open audio: %s\n", SDL_GetError());
+    } else {
+        log_debug("Opened audio device %s", g_audio_device_name);
+
+        if (g_audio_spec.format != g_desired_audio_spec.format)
+            log_debug("Could not get desired audio format.\n");
+    }
+}
+
 int main(int argc, char **argv) {
     // Init stuff
     srand((unsigned int) time(NULL));
@@ -215,56 +229,30 @@ int main(int argc, char **argv) {
     Hero_PrintSDLVersion();
 
     // Audio stuff
-    Uint32 frame_step = 0;
-    Uint32 audio_step = 0;
-    Uint32 tone_hz = 220;
-    Sint16 tone_volume = 3000;
-    Uint32 square_wave_period = AUDIO_FREQ / tone_hz;
-    Uint32 half_square_wave_period = square_wave_period / 2;
-    Sint16 bytes_per_sample = sizeof(Sint16) * 2;
-    int sound_is_playing = 0;
-
-    SDL_zero(desiredAudioSpec);
-    desiredAudioSpec.freq = AUDIO_FREQ;
-    desiredAudioSpec.format = AUDIO_S16LSB;
-    desiredAudioSpec.channels = AUDIO_CHANNELS;
-    //desiredAudioSpec.samples = 4096;
-    desiredAudioSpec.samples = (AUDIO_FREQ * bytes_per_sample /
-                                AUDIO_FRAMERATE);
-
-    audioDevice = SDL_OpenAudioDevice(audioDeviceName, 0,
-                                      &desiredAudioSpec, &audioSpec,
-                                      SDL_AUDIO_ALLOW_ANY_CHANGE);
-
-    if (audioDevice == 0) {
-        log_debug("Failed to open audio: %s\n", SDL_GetError());
-    } else {
-        log_debug("Opened audio device %s", audioDeviceName);
-
-        if (audioSpec.format != desiredAudioSpec.format)
-            log_debug("Could not get desired audio format.\n");
-    }
+    Hero_InitAudio();
 
     // Create the window and renderer
     SDL_Window *window = SDL_CreateWindow(
             "Handmade Hero",
             SDL_WINDOWPOS_UNDEFINED,
             SDL_WINDOWPOS_UNDEFINED,
-            WIDTH, HEIGHT,
+            k_window_width, k_window_height,
             SDL_WINDOW_RESIZABLE);
 
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1,
-            //SDL_RENDERER_PRESENTVSYNC);
-                                                SDL_RENDERER_SOFTWARE);
+            SDL_RENDERER_PRESENTVSYNC);
+            //                                    SDL_RENDERER_SOFTWARE);
 
     // Initially set the pixel buffer dimensions
     int window_w, window_h;
     SDL_GetWindowSize(window, &window_w, &window_h);
-    pixelBufferWidth = (Uint32) window_w;
-    pixelBufferHeight = (Uint32) window_h;
+    g_pixel_buffer_width = (Uint32) window_w;
+    g_pixel_buffer_height = (Uint32) window_h;
     Hero_ResizeTexture(renderer, (Uint32) window_w, (Uint32) window_h);
 
     // Loop things
+    int sound_is_playing = 0;
+    Uint32 frame_step = 0;
     int running = 1;
 
     while (running) {
@@ -278,28 +266,10 @@ int main(int argc, char **argv) {
         Hero_UpdateGraphics(renderer);
 
         // Playing test sound
-        Uint32 target_queue_bytes = AUDIO_FREQ * bytes_per_sample;
-        Uint32 bytes_to_write =
-                target_queue_bytes - SDL_GetQueuedAudioSize(audioDevice);
-
-        if (bytes_to_write) {
-            void *sound_buffer = malloc(bytes_to_write);
-            Sint16 *sample_out = (Sint16 *) sound_buffer;
-            Uint32 sample_count = bytes_to_write / bytes_per_sample;
-
-            for (Uint32 i = 0; i < sample_count; ++i) {
-                Sint16 sample_value = ((audio_step++ /
-                                        half_square_wave_period) % 2)
-                                      ? tone_volume : -tone_volume;
-                *sample_out++ = sample_value;
-                *sample_out++ = sample_value;
-            }
-            SDL_QueueAudio(audioDevice, sound_buffer, bytes_to_write);
-            free(sound_buffer);
-        }
+        Hero_PlayTestSound(frame_step);
 
         if (!sound_is_playing) {
-            SDL_PauseAudioDevice(audioDevice, 0);
+            SDL_PauseAudioDevice(g_audio_device, 1);
             sound_is_playing = 1;
         }
 
@@ -315,12 +285,12 @@ int main(int argc, char **argv) {
         frame_step++;
     }
 
-    if (pixelBuffer)
-        munmap(pixelBuffer,
-               pixelBufferWidth * pixelBufferHeight * bytesPerPixel);
+    if (g_pixel_buffer)
+        munmap(g_pixel_buffer,
+               g_pixel_buffer_width * g_pixel_buffer_height * k_bytes_per_pixel);
 
-    if (texture)
-        SDL_DestroyTexture(texture);
+    if (g_texture)
+        SDL_DestroyTexture(g_texture);
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
