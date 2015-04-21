@@ -46,7 +46,8 @@ void Hero_ResizeTexture(SDL_Renderer *renderer, Uint32 width, Uint32 height) {
     // Clear _old_ pixel width and height
     if (g_pixel_buffer)
         munmap(g_pixel_buffer,
-               g_pixel_buffer_width * g_pixel_buffer_height * k_bytes_per_pixel);
+               g_pixel_buffer_width * g_pixel_buffer_height *
+               k_bytes_per_pixel);
 
     if (g_texture)
         SDL_DestroyTexture(g_texture);
@@ -61,7 +62,7 @@ void Hero_ResizeTexture(SDL_Renderer *renderer, Uint32 width, Uint32 height) {
     g_pixel_buffer_width = width;
 
     g_pixel_buffer = mmap(0, g_pixel_buffer_width * g_pixel_buffer_height *
-                                                    k_bytes_per_pixel,
+                             k_bytes_per_pixel,
                           PROT_READ | PROT_WRITE,
                           MAP_PRIVATE | MAP_ANON,
                           -1, 0);
@@ -172,7 +173,9 @@ void Hero_PrintSDLVersion() {
     }
 }
 
-void Hero_PlayTestSound(Uint32 audio_step) {
+void Hero_PlayTestSound() {
+    // Retain the position where we are in the audio test loop
+    static Uint32 audio_step = 0;
     Uint32 tone_hz = 440;
     Sint16 tone_volume = 3000;
     Uint32 square_wave_period = k_audio_freq / tone_hz;
@@ -206,11 +209,9 @@ void Hero_InitAudio() {
     g_desired_audio_spec.channels = k_audio_channels;
     //g_desired_audio_spec.samples = 4096;
     g_desired_audio_spec.samples = (k_audio_freq * k_audio_bytes_per_sample /
-                                                 k_audio_rate);
-
-    g_audio_device = SDL_OpenAudioDevice(g_audio_device_name, 0,
-                                        &g_desired_audio_spec, &g_audio_spec,
-                                        SDL_AUDIO_ALLOW_ANY_CHANGE);
+                                    k_audio_rate);   g_audio_device = SDL_OpenAudioDevice(g_audio_device_name, 0,
+                                         &g_desired_audio_spec, &g_audio_spec,
+                                         SDL_AUDIO_ALLOW_ANY_CHANGE);
 
     if (g_audio_device == 0) {
         log_debug("Failed to open audio: %s\n", SDL_GetError());
@@ -240,8 +241,8 @@ int main(int argc, char **argv) {
             SDL_WINDOW_RESIZABLE);
 
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1,
-            SDL_RENDERER_PRESENTVSYNC);
-            //                                    SDL_RENDERER_SOFTWARE);
+            //                                            SDL_RENDERER_PRESENTVSYNC);
+                                                SDL_RENDERER_PRESENTVSYNC);
 
     // Initially set the pixel buffer dimensions
     int window_w, window_h;
@@ -266,7 +267,7 @@ int main(int argc, char **argv) {
         Hero_UpdateGraphics(renderer);
 
         // Playing test sound
-        Hero_PlayTestSound(frame_step);
+        Hero_PlayTestSound();
 
         if (!sound_is_playing) {
             SDL_PauseAudioDevice(g_audio_device, 1);
@@ -287,7 +288,8 @@ int main(int argc, char **argv) {
 
     if (g_pixel_buffer)
         munmap(g_pixel_buffer,
-               g_pixel_buffer_width * g_pixel_buffer_height * k_bytes_per_pixel);
+               g_pixel_buffer_width * g_pixel_buffer_height *
+               k_bytes_per_pixel);
 
     if (g_texture)
         SDL_DestroyTexture(g_texture);
