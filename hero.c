@@ -16,7 +16,7 @@
 
 const Uint32 k_window_width = 960;
 const Uint32 k_window_height = 540;
-const double k_display_msmax = 1000.0 / 30.0;    // 30 FPS
+const double k_display_msmax = 1000.0 / 60;    // 30 FPS
 
 const Uint16 k_audio_freq = 48000;
 const Uint16 k_audio_rate = 60;
@@ -28,7 +28,7 @@ static SDL_Texture *g_texture;
 static void *g_pixel_buffer;
 static Uint32 g_pixel_buffer_height;
 static Uint32 g_pixel_buffer_width;
-static const Uint32 k_bytes_per_pixel = 4;
+static const Uint32 k_bytes_per_pixel = (Uint32) sizeof(Uint32);
 
 static SDL_AudioSpec g_desired_audio_spec, g_audio_spec;
 static SDL_AudioDeviceID g_audio_device;
@@ -37,12 +37,115 @@ static char *g_audio_device_name;
 static SDL_GameController *g_game_controller = NULL;
 static int g_num_game_controllers = 0;
 static int EVT_RIGHT = 0;
+static int EVT_LEFT = 0;
+static int EVT_UP = 0;
+static int EVT_DOWN = 0;
+static int EVT_BTNA = 0;
+static int EVT_BTNB = 0;
+static int EVT_BTNX = 0;
+static int EVT_BTNY = 0;
 
 void Hero_PutPixel(void *pixel_buffer, int pitch,
                    const Uint32 x, const Uint32 y, const Uint32 color) {
     Uint8 *pixel = (Uint8 *) pixel_buffer;
     pixel += (y * pitch) + (x * sizeof(Uint32));
     *((Uint32 *) pixel) = color;
+}
+
+void Hero_DebugDrawWeirdGradient() {
+    const Uint32 width = g_pixel_buffer_width;
+    const Uint32 height = g_pixel_buffer_height;
+
+    static Uint32 blue_offset = 0;
+    static Uint32 green_offset = 0;
+
+    if (EVT_RIGHT)
+        blue_offset -= 4;
+    if (EVT_LEFT)
+        green_offset += 4;
+
+    ++blue_offset;
+    green_offset += 2;
+
+    Uint32 pitch = width * k_bytes_per_pixel;
+    //log_debug("pitch %d", pitch);
+    Uint8 *row = (Uint8 *) g_pixel_buffer;
+    Uint32 *pixel = (Uint32 *) row;
+
+    for (Uint32 y = 0; y < height; ++y) {
+
+        for (Uint32 x = 0; x < width; ++x) {
+            Uint8 blue = (Uint8) (x + blue_offset);
+            Uint8 green = (Uint8) (x + green_offset);
+
+            *pixel++ = ((green << 8) | blue);
+        }
+
+        //log_debug("row %d", *row);
+        row += pitch;
+    }
+}
+
+void Hero_DebugDrawRunningPixel(SDL_Renderer *renderer) {
+    static Uint32 pos = 0;
+
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    static SDL_Rect rectangle;
+
+    rectangle.x += 0 + EVT_RIGHT * 8 - EVT_LEFT * 8;
+    rectangle.y += 0 + EVT_DOWN * 8 - EVT_UP * 8;
+    rectangle.w = 50;
+    rectangle.h = 50;
+    SDL_RenderFillRect(renderer, &rectangle);
+}
+
+Uint32 Hero_RGBColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
+    return (Uint32) ((a & 0xff) << 24)
+           | ((b & 0xff) << 16)
+           | ((g & 0xff) << 8)
+           | ((r & 0xff));
+}
+
+void Hero_DebugDrawGradient(int frame_step) {
+    frame_step = 0;
+    static int pmove = 0;
+
+    if (EVT_RIGHT)
+        pmove += 1;
+
+    for (int y = 0; y < g_pixel_buffer_height; y++) {
+        for (int x = 0; x < g_pixel_buffer_width; x++) {
+            Uint32 number = (Uint32) (y + frame_step);
+            //Uint32 number = (Uint32) rand();
+            Uint8 R = (Uint8) ((x) % 256);
+            Uint8 G = (Uint8) ((x) % 256);
+            Uint8 B = (Uint8) ((number) % 256);
+            Uint32 color = (Uint32) ((0xff << 24)
+                                     | ((B & (0xff)) << 16)
+                                     | ((G & (0xff)) << 8)
+                                     | ((R & 0xff)));
+            Hero_PutPixel(g_pixel_buffer, g_pixel_buffer_width * 4,
+                          (x - pmove * 4) % g_pixel_buffer_width,
+                          (Uint32 const) y,
+                          color);
+        }
+    }
+}
+
+void Hero_DebugDrawBox() {
+    static int pmove = 0;
+
+    if (EVT_RIGHT)
+        pmove += 8;
+
+    Hero_PutPixel(g_pixel_buffer, g_pixel_buffer_width, 100, 200,
+                  0xffff0000);
+    Hero_PutPixel(g_pixel_buffer, g_pixel_buffer_width, 100, 250,
+                  0xff00ff00);
+    Hero_PutPixel(g_pixel_buffer, g_pixel_buffer_width, 150, 200,
+                  0xff0000ff);
+    Hero_PutPixel(g_pixel_buffer, g_pixel_buffer_width, 150, 250,
+                  0xffffffff);
 }
 
 void Hero_ResizeTexture(SDL_Renderer *renderer, Uint32 width, Uint32 height) {
@@ -75,35 +178,10 @@ void Hero_ResizeTexture(SDL_Renderer *renderer, Uint32 width, Uint32 height) {
 
 }
 
-void Hero_DrawGradient(int frame_step) {
-    frame_step = 0;
-    static int pmove = 0;
-
-    if (EVT_RIGHT)
-        pmove += 1;
-
-    for (int y = 0; y < g_pixel_buffer_height; y++) {
-        for (int x = 0; x < g_pixel_buffer_width; x++) {
-            Uint32 number = (Uint32) (y + frame_step);
-            //Uint32 number = (Uint32) rand();
-            Uint8 R = (Uint8) ((x) % 256);
-            Uint8 G = (Uint8) ((x) % 256);
-            Uint8 B = (Uint8) ((number) % 256);
-            Uint32 color = (Uint32) ((0xff << 24)
-                                     | ((B & (0xff)) << 16)
-                                     | ((G & (0xff)) << 8)
-                                     | ((R & 0xff)));
-            Hero_PutPixel(g_pixel_buffer, g_pixel_buffer_width * 4,
-                          (x - pmove * 4) % g_pixel_buffer_width,
-                          (Uint32 const) y,
-                          color);
-        }
-    }
-}
-
 void Hero_UpdateGraphics(SDL_Renderer *renderer) {
     if (g_pixel_buffer) if (SDL_UpdateTexture(g_texture, 0, g_pixel_buffer,
-                                              g_pixel_buffer_width * 4)) {
+                                              g_pixel_buffer_width *
+                                              k_bytes_per_pixel)) {
         log_debug("Could not update g_texture!");
         exit(-1);
     }
@@ -114,14 +192,19 @@ void Hero_UpdateGraphics(SDL_Renderer *renderer) {
 
 void Hero_InitControllers() {
     log_debug("Init controllers...");
+
+    if (g_game_controller)
+        SDL_GameControllerClose(g_game_controller);
+
     g_num_game_controllers = SDL_NumJoysticks();
+    log_debug("Found %d controller(s)", g_num_game_controllers);
     SDL_GameControllerEventState(SDL_IGNORE);
 
     for (int i = 0; i < g_num_game_controllers; ++i) {
         if (SDL_IsGameController(i)) {
             g_game_controller = SDL_GameControllerOpen(i);
             if (g_game_controller) {
-                log_debug("Controller name %s",
+                log_debug("Controller #%d name %s", i,
                           SDL_GameControllerNameForIndex(i));
                 SDL_GameControllerEventState(SDL_ENABLE);
                 break;
@@ -137,54 +220,120 @@ int Hero_HandleEvents() {
     int running = 1;
     SDL_Event event;
 
-    // Controller plugged in or out
-    if (g_num_game_controllers != SDL_NumJoysticks()) {
-        Hero_InitControllers();
-    }
-
-    // Handle controller input
-    // Replace with event.type == SDL_CONTROLLERBUTTONDOWN)
-    if (g_game_controller != NULL) {
-        if (SDL_GameControllerGetButton(g_game_controller,
-                                        SDL_CONTROLLER_BUTTON_DPAD_RIGHT) ==
-            1 && EVT_RIGHT == 1) {
-            //log_debug("DPAD_RIGHT hold");
-        }
-        else if (SDL_GameControllerGetButton(g_game_controller,
-                                             SDL_CONTROLLER_BUTTON_DPAD_RIGHT) ==
-                 1) {
-            log_debug("DPAD_RIGHT pressed");
-            EVT_RIGHT = 1;
-        }
-
-        if (SDL_GameControllerGetButton(g_game_controller,
-                                        SDL_CONTROLLER_BUTTON_DPAD_RIGHT) == 0
-            && EVT_RIGHT == 1) {
-            log_debug("DPAD_RIGHT released");
-            EVT_RIGHT = 0;
-        }
-    }
-
     if (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) {
             running = 0;
         }
 
-        if (event.type == SDL_KEYDOWN) {
+        // Controller plugged in or out
+        if (event.type == SDL_CONTROLLERDEVICEADDED ||
+            event.type == SDL_CONTROLLERDEVICEREMOVED)
+            Hero_InitControllers();
+
+        // Controller DPad stuff
+        if (event.type == SDL_CONTROLLERBUTTONDOWN &&
+            event.cbutton.state == SDL_PRESSED) {
+            switch (event.cbutton.button) {
+                case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                    EVT_RIGHT = 1;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                    EVT_LEFT = 1;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                    EVT_UP = 1;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                    EVT_DOWN = 1;
+                    break;
+                default:
+                    break;
+            }
+
+        }
+
+        if (event.type == SDL_CONTROLLERBUTTONUP &&
+            event.cbutton.state == SDL_RELEASED) {
+            switch (event.cbutton.button) {
+                case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                    EVT_RIGHT = 0;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                    EVT_LEFT = 0;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                    EVT_UP = 0;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                    EVT_DOWN = 0;
+
+                default:
+                    break;
+            }
+        }
+
+        // Controller Axis stuff
+        if (event.type == SDL_CONTROLLERAXISMOTION) {
+            switch (event.caxis.axis) {
+                case SDL_CONTROLLER_AXIS_LEFTX:
+                    //log_debug("left axis: %d", event.caxis.value);
+                    if (event.caxis.value > 25000) {
+                        EVT_RIGHT = 1;
+                        EVT_LEFT = 0;
+                    }
+                    else if (event.caxis.value < -25000) {
+                        EVT_RIGHT = 0;
+                        EVT_LEFT = 1;
+                    }
+                    else {
+                        EVT_RIGHT = 0;
+                        EVT_LEFT = 0;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (event.type == SDL_KEYDOWN && event.key.state == SDL_PRESSED) {
             log_debug("Key down %d - %s", event.key.keysym.sym,
                       SDL_GetKeyName(event.key.keysym.sym));
 
-            if (event.key.keysym.sym == SDLK_RIGHT &&
-                event.key.state == SDL_PRESSED)
-                EVT_RIGHT = 1;
+            switch (event.key.keysym.sym) {
+                case SDLK_RIGHT:
+                    EVT_RIGHT = 1;
+                    break;
+                case SDLK_LEFT:
+                    EVT_LEFT = 1;
+                    break;
+                case SDLK_UP:
+                    EVT_UP = 1;
+                    break;
+                case SDLK_DOWN:
+                    EVT_DOWN = 1;
+                    break;
+                default:
+                    break;
+            }
         }
 
-        if (event.type == SDL_KEYUP) {
-            if (event.key.keysym.sym == SDLK_RIGHT &&
-                event.key.state == SDL_RELEASED)
-                EVT_RIGHT = 0;
+        if (event.type == SDL_KEYUP && event.key.state == SDL_RELEASED) {
+            switch (event.key.keysym.sym) {
+                case SDLK_RIGHT:
+                    EVT_RIGHT = 0;
+                    break;
+                case SDLK_LEFT:
+                    EVT_LEFT = 0;
+                    break;
+                case SDLK_UP:
+                    EVT_UP = 0;
+                    break;
+                case SDLK_DOWN:
+                    EVT_DOWN = 0;
+                default:
+                    break;
+            }
         }
-
 
         if (event.type == SDL_WINDOWEVENT) {
             SDL_Window *window = SDL_GetWindowFromID(event.window.windowID);
@@ -192,13 +341,16 @@ int Hero_HandleEvents() {
             switch (event.window.event) {
                 case SDL_WINDOWEVENT_EXPOSED:
                     SDL_Log("Window %d exposed", event.window.windowID);
-                    Hero_UpdateGraphics(renderer);
+                    //Hero_UpdateGraphics(renderer);
+                    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 0);
+                    SDL_RenderClear(renderer);
                     break;
                 case SDL_WINDOWEVENT_RESIZED:
                     SDL_Log("Window %d resized to %dx%d",
                             event.window.windowID, event.window.data1,
                             event.window.data2);
-                    Hero_ResizeTexture(renderer, (Uint32) event.window.data1,
+                    Hero_ResizeTexture(renderer,
+                                       (Uint32) event.window.data1,
                                        (Uint32) event.window.data2);
                     break;
 
@@ -245,6 +397,9 @@ void Hero_PrintSDLVersion() {
     } else {
         log_debug("Audio not initialized.");
     }
+
+    log_debug("sizeof(Uint32) = %d", sizeof(Uint32));
+    log_debug("sizeof(Uint8) = %d", sizeof(Uint8));
 }
 
 void Hero_PlayTestSound() {
@@ -282,10 +437,12 @@ void Hero_InitAudio() {
     g_desired_audio_spec.format = AUDIO_S16LSB;
     g_desired_audio_spec.channels = k_audio_channels;
     //g_desired_audio_spec.samples = 4096;
-    g_desired_audio_spec.samples = (k_audio_freq * k_audio_bytes_per_sample /
+    g_desired_audio_spec.samples = (k_audio_freq *
+                                    k_audio_bytes_per_sample /
                                     k_audio_rate);
     g_audio_device = SDL_OpenAudioDevice(g_audio_device_name, 0,
-                                         &g_desired_audio_spec, &g_audio_spec,
+                                         &g_desired_audio_spec,
+                                         &g_audio_spec,
                                          SDL_AUDIO_ALLOW_ANY_CHANGE);
 
     if (g_audio_device == 0) {
@@ -308,8 +465,8 @@ int main(int argc, char **argv) {
     // Audio stuff
     Hero_InitAudio();
 
-    Hero_InitControllers();
-
+    // Handled in event loop
+    // Hero_InitControllers();
 
     // Create the window and renderer
     SDL_Window *window = SDL_CreateWindow(
@@ -320,15 +477,17 @@ int main(int argc, char **argv) {
             SDL_WINDOW_RESIZABLE);
 
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1,
-            //                                            SDL_RENDERER_PRESENTVSYNC);
                                                 SDL_RENDERER_PRESENTVSYNC);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderClear(renderer);
 
     // Initially set the pixel buffer dimensions
     int window_w, window_h;
     SDL_GetWindowSize(window, &window_w, &window_h);
     g_pixel_buffer_width = (Uint32) window_w;
     g_pixel_buffer_height = (Uint32) window_h;
-    Hero_ResizeTexture(renderer, (Uint32) window_w, (Uint32) window_h);
+    //Hero_ResizeTexture(renderer, (Uint32) window_w, (Uint32) window_h);
 
     // Loop things
     int sound_is_playing = 0;
@@ -342,8 +501,22 @@ int main(int argc, char **argv) {
 
         // Actual game stuff
         running = Hero_HandleEvents();
-        Hero_DrawGradient(frame_step);
-        Hero_UpdateGraphics(renderer);
+        //Hero_DebugDrawGradient(frame_step);
+        //Hero_DebugDrawWeirdGradient();
+        //Hero_DebugDrawBox();
+        //Hero_UpdateGraphics(renderer);
+
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_Rect rectangle;
+
+        rectangle.x = 0;
+        rectangle.y = 0;
+        rectangle.w = g_pixel_buffer_width;
+        rectangle.h = g_pixel_buffer_height;
+        SDL_RenderFillRect(renderer, &rectangle);
+        Hero_DebugDrawRunningPixel(renderer);
+
+        SDL_RenderPresent(renderer);
 
         // Playing test sound
         Hero_PlayTestSound();
@@ -356,8 +529,9 @@ int main(int argc, char **argv) {
         // Performance
         Uint64 perf_counter_end = SDL_GetPerformanceCounter();
         Uint64 perf_counter_elapsed = perf_counter_end - perf_counter_start;
-        double perf_per_frame = (((1000.0f * (double) perf_counter_elapsed) /
-                                  (double) perf_freq));
+        double perf_per_frame = ((
+                (1000.0f * (double) perf_counter_elapsed) /
+                (double) perf_freq));
 
         // Ensure we are at a constant framerate
         double fps_padding_time = k_display_msmax - perf_per_frame;
@@ -374,16 +548,18 @@ int main(int argc, char **argv) {
 
     log_debug("Shutting down...");
 
+    if (g_game_controller != NULL)
+        SDL_GameControllerClose(g_game_controller);
+
+    /*
     if (g_pixel_buffer)
         munmap(g_pixel_buffer,
                g_pixel_buffer_width * g_pixel_buffer_height *
                k_bytes_per_pixel);
+               */
 
     if (g_texture)
         SDL_DestroyTexture(g_texture);
-
-    if (g_game_controller != NULL)
-        SDL_GameControllerClose(g_game_controller);
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
