@@ -45,6 +45,52 @@ static int EVT_BTNB = 0;
 static int EVT_BTNX = 0;
 static int EVT_BTNY = 0;
 
+/* XPM */
+static const char *arrow[] = {
+        /* width height num_colors chars_per_pixel */
+        "    32    32        3            1",
+        /* colors */
+        "X c #000000",
+        ". c #ffffff",
+        "  c None",
+        /* pixels */
+        "                X               ",
+        "                X.              ",
+        "                X.              ",
+        "                X.              ",
+        "                X.              ",
+        "                X.              ",
+        "                 .              ",
+        "         XXXXXX   XXXXXX        ",
+        "          ......   ......       ",
+        "                X.              ",
+        "                X.              ",
+        "                X.              ",
+        "                X.              ",
+        "                X.              ",
+        "                X.              ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "                                ",
+        "0,0"
+};
+
+static SDL_Point mouse_position;
+
 void Hero_PutPixel(void *pixel_buffer, int pitch,
                    const Uint32 x, const Uint32 y, const Uint32 color) {
     Uint8 *pixel = (Uint8 *) pixel_buffer;
@@ -58,11 +104,6 @@ void Hero_DebugDrawWeirdGradient() {
 
     static Uint32 blue_offset = 0;
     static Uint32 green_offset = 0;
-
-    if (EVT_RIGHT)
-        blue_offset -= 4;
-    if (EVT_LEFT)
-        green_offset += 4;
 
     ++blue_offset;
     green_offset += 2;
@@ -87,8 +128,6 @@ void Hero_DebugDrawWeirdGradient() {
 }
 
 void Hero_DebugDrawRunningPixel(SDL_Renderer *renderer) {
-    static Uint32 pos = 0;
-
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     static SDL_Rect rectangle;
 
@@ -132,22 +171,6 @@ void Hero_DebugDrawGradient(int frame_step) {
     }
 }
 
-void Hero_DebugDrawBox() {
-    static int pmove = 0;
-
-    if (EVT_RIGHT)
-        pmove += 8;
-
-    Hero_PutPixel(g_pixel_buffer, g_pixel_buffer_width, 100, 200,
-                  0xffff0000);
-    Hero_PutPixel(g_pixel_buffer, g_pixel_buffer_width, 100, 250,
-                  0xff00ff00);
-    Hero_PutPixel(g_pixel_buffer, g_pixel_buffer_width, 150, 200,
-                  0xff0000ff);
-    Hero_PutPixel(g_pixel_buffer, g_pixel_buffer_width, 150, 250,
-                  0xffffffff);
-}
-
 void Hero_ResizeTexture(SDL_Renderer *renderer, Uint32 width, Uint32 height) {
     // Clear _old_ pixel width and height
     if (g_pixel_buffer)
@@ -178,15 +201,79 @@ void Hero_ResizeTexture(SDL_Renderer *renderer, Uint32 width, Uint32 height) {
 
 }
 
+static SDL_Cursor *init_system_cursor(const char *image[]) {
+    int i, row, col;
+    Uint8 data[4 * 32];
+    Uint8 mask[4 * 32];
+    int hot_x, hot_y;
+
+    i = -1;
+    for (row = 0; row < 32; ++row) {
+        for (col = 0; col < 32; ++col) {
+            if (col % 8) {
+                data[i] <<= 1;
+                mask[i] <<= 1;
+            } else {
+                ++i;
+                data[i] = mask[i] = 0;
+            }
+            switch (image[4 + row][col]) {
+                case 'X':
+                    data[i] |= 0x01;
+                    mask[i] |= 0x01;
+                    break;
+                case '.':
+                    mask[i] |= 0x01;
+                    break;
+                case ' ':
+                    break;
+            }
+        }
+    }
+    sscanf(image[4 + row], "%d,%d", &hot_x, &hot_y);
+    return SDL_CreateCursor(data, mask, 32, 32, hot_x, hot_y);
+}
+
+void Hero_DebugDrawMouse(SDL_Renderer *renderer) {
+    /*
+    SDL_SetRenderDrawColor(renderer, 0xaa, 0xaa, 0xaa, 0);
+    static SDL_Rect rectangle;
+
+    rectangle.x = mouse_position.x;
+    rectangle.y = mouse_position.y;
+    rectangle.w = 50;
+    rectangle.h = 50;
+    SDL_RenderFillRect(renderer, &rectangle);
+    log_debug("mouse x %d", rectangle.x);
+    */
+
+
+
+
+}
+
 void Hero_UpdateGraphics(SDL_Renderer *renderer) {
+    /*
     if (g_pixel_buffer) if (SDL_UpdateTexture(g_texture, 0, g_pixel_buffer,
                                               g_pixel_buffer_width *
                                               k_bytes_per_pixel)) {
         log_debug("Could not update g_texture!");
         exit(-1);
     }
-
     SDL_RenderCopy(renderer, g_texture, 0, 0);
+    */
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderClear(renderer);
+    SDL_Rect rectangle;
+
+    rectangle.x = 0;
+    rectangle.y = 0;
+    rectangle.w = g_pixel_buffer_width;
+    rectangle.h = g_pixel_buffer_height;
+    SDL_RenderFillRect(renderer, &rectangle);
+
+    Hero_DebugDrawRunningPixel(renderer);
+    Hero_DebugDrawMouse(renderer);
     SDL_RenderPresent(renderer);
 };
 
@@ -341,17 +428,17 @@ int Hero_HandleEvents() {
             switch (event.window.event) {
                 case SDL_WINDOWEVENT_EXPOSED:
                     SDL_Log("Window %d exposed", event.window.windowID);
-                    //Hero_UpdateGraphics(renderer);
-                    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 0);
-                    SDL_RenderClear(renderer);
+                    g_pixel_buffer_width = (Uint32) event.window.data1;
+                    g_pixel_buffer_width = (Uint32) event.window.data2;
+                    Hero_UpdateGraphics(renderer);
                     break;
                 case SDL_WINDOWEVENT_RESIZED:
                     SDL_Log("Window %d resized to %dx%d",
                             event.window.windowID, event.window.data1,
                             event.window.data2);
-                    Hero_ResizeTexture(renderer,
-                                       (Uint32) event.window.data1,
-                                       (Uint32) event.window.data2);
+                    g_pixel_buffer_width = (Uint32) event.window.data1;
+                    g_pixel_buffer_width = (Uint32) event.window.data2;
+                    Hero_UpdateGraphics(renderer);
                     break;
 
                 default:
@@ -494,6 +581,9 @@ int main(int argc, char **argv) {
     Uint32 frame_step = 0;
     int running = 1;
 
+    SDL_SetCursor(init_system_cursor(arrow));
+    SDL_ShowCursor(SDL_ENABLE);
+
     while (running) {
         // Performance
         Uint64 perf_freq = SDL_GetPerformanceFrequency();
@@ -501,22 +591,12 @@ int main(int argc, char **argv) {
 
         // Actual game stuff
         running = Hero_HandleEvents();
+        SDL_GetMouseState(&mouse_position.x, &mouse_position.y);
         //Hero_DebugDrawGradient(frame_step);
         //Hero_DebugDrawWeirdGradient();
-        //Hero_DebugDrawBox();
-        //Hero_UpdateGraphics(renderer);
 
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_Rect rectangle;
 
-        rectangle.x = 0;
-        rectangle.y = 0;
-        rectangle.w = g_pixel_buffer_width;
-        rectangle.h = g_pixel_buffer_height;
-        SDL_RenderFillRect(renderer, &rectangle);
-        Hero_DebugDrawRunningPixel(renderer);
-
-        SDL_RenderPresent(renderer);
+        Hero_UpdateGraphics(renderer);
 
         // Playing test sound
         Hero_PlayTestSound();
