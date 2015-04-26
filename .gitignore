@@ -3,3 +3,4 @@ hero
 .DS_Store
 tags
 attic/*
+handmade_penguin_renderer.c
