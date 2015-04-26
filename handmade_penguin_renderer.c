@@ -40,22 +40,18 @@ global_variable int BitmapHeight;
 global_variable int BytesPerPixel = 4;
 
 internal void
-RenderWeirdGradient(int BlueOffset, int GreenOffset)
-{
+RenderWeirdGradient(int BlueOffset, int GreenOffset) {
     int Width = BitmapWidth;
     int Height = BitmapHeight;
 
-    int Pitch = Width*BytesPerPixel;
-    uint8 *Row = (uint8 *)BitmapMemory;
-    for(int Y = 0;
-        Y < BitmapHeight;
-        ++Y)
-    {
-        uint32 *Pixel = (uint32 *)Row;
-        for(int X = 0;
-            X < BitmapWidth;
-            ++X)
-        {
+    int Pitch = Width * BytesPerPixel;
+    uint8 *Row = (uint8 *) BitmapMemory;
+
+    for (int Y = 0; Y < BitmapHeight; ++Y) {
+        uint32 *Pixel = (uint32 *) Row;
+        for (int X = 0;
+             X < BitmapWidth;
+             ++X) {
             uint8 Blue = (X + BlueOffset);
             uint8 Green = (Y + GreenOffset);
 
@@ -67,22 +63,19 @@ RenderWeirdGradient(int BlueOffset, int GreenOffset)
 }
 
 internal void
-SDLResizeTexture(SDL_Renderer *Renderer, int Width, int Height)
-{
-    if (BitmapMemory)
-    {
+SDLResizeTexture(SDL_Renderer *Renderer, int Width, int Height) {
+    if (BitmapMemory) {
         munmap(BitmapMemory,
                BitmapWidth * BitmapHeight * BytesPerPixel);
     }
-    if (Texture)
-    {
+    if (Texture) {
         SDL_DestroyTexture(Texture);
     }
     Texture = SDL_CreateTexture(Renderer,
-                      SDL_PIXELFORMAT_ARGB8888,
-                      SDL_TEXTUREACCESS_STREAMING,
-                      Width,
-                      Height);
+                                SDL_PIXELFORMAT_ARGB8888,
+                                SDL_TEXTUREACCESS_STREAMING,
+                                Width,
+                                Height);
     BitmapWidth = Width;
     BitmapHeight = Height;
     BitmapMemory = mmap(0,
@@ -94,8 +87,7 @@ SDLResizeTexture(SDL_Renderer *Renderer, int Width, int Height)
 }
 
 internal void
-SDLUpdateWindow(SDL_Window *Window, SDL_Renderer *Renderer)
-{
+SDLUpdateWindow(SDL_Window *Window, SDL_Renderer *Renderer) {
     SDL_UpdateTexture(Texture,
                       0,
                       BitmapMemory,
@@ -110,50 +102,50 @@ SDLUpdateWindow(SDL_Window *Window, SDL_Renderer *Renderer)
 }
 
 
-bool HandleEvent(SDL_Event *Event)
-{
+bool HandleEvent(SDL_Event *Event) {
     bool ShouldQuit = false;
 
-    switch(Event->type)
-    {
-        case SDL_QUIT:
-        {
+    switch (Event->type) {
+        case SDL_QUIT: {
             printf("SDL_QUIT\n");
             ShouldQuit = true;
-        } break;
+        }
+            break;
 
-        case SDL_WINDOWEVENT:
-        {
-            switch(Event->window.event)
-            {
-                case SDL_WINDOWEVENT_SIZE_CHANGED:
-                {
-                    SDL_Window *Window = SDL_GetWindowFromID(Event->window.windowID);
+        case SDL_WINDOWEVENT: {
+            switch (Event->window.event) {
+                case SDL_WINDOWEVENT_SIZE_CHANGED: {
+                    SDL_Window *Window = SDL_GetWindowFromID(
+                            Event->window.windowID);
                     SDL_Renderer *Renderer = SDL_GetRenderer(Window);
-                    printf("SDL_WINDOWEVENT_SIZE_CHANGED (%d, %d)\n", Event->window.data1, Event->window.data2);
-                    SDLResizeTexture(Renderer, Event->window.data1, Event->window.data2);
-                } break;
+                    printf("SDL_WINDOWEVENT_SIZE_CHANGED (%d, %d)\n",
+                           Event->window.data1, Event->window.data2);
+                    SDLResizeTexture(Renderer, Event->window.data1,
+                                     Event->window.data2);
+                }
+                    break;
 
-                case SDL_WINDOWEVENT_FOCUS_GAINED:
-                {
+                case SDL_WINDOWEVENT_FOCUS_GAINED: {
                     printf("SDL_WINDOWEVENT_FOCUS_GAINED\n");
-                } break;
+                }
+                    break;
 
-                case SDL_WINDOWEVENT_EXPOSED:
-                {
-                    SDL_Window *Window = SDL_GetWindowFromID(Event->window.windowID);
+                case SDL_WINDOWEVENT_EXPOSED: {
+                    SDL_Window *Window = SDL_GetWindowFromID(
+                            Event->window.windowID);
                     SDL_Renderer *Renderer = SDL_GetRenderer(Window);
                     SDLUpdateWindow(Window, Renderer);
-                } break;
+                }
+                    break;
             }
-        } break;
+        }
+            break;
     }
 
-    return(ShouldQuit);
+    return (ShouldQuit);
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     SDL_Init(SDL_INIT_VIDEO);
     // Create our window.
     SDL_Window *Window = SDL_CreateWindow("Handmade Hero",
@@ -162,27 +154,22 @@ int main(int argc, char *argv[])
                                           640,
                                           480,
                                           SDL_WINDOW_RESIZABLE);
-    if(Window)
-    {
+    if (Window) {
         // Create a "Renderer" for our window.
         SDL_Renderer *Renderer = SDL_CreateRenderer(Window,
                                                     -1,
                                                     0);
-        if (Renderer)
-        {
+        if (Renderer) {
             bool Running = true;
             int Width, Height;
             SDL_GetWindowSize(Window, &Width, &Height);
             SDLResizeTexture(Renderer, Width, Height);
             int XOffset = 0;
             int YOffset = 0;
-            while(Running)
-            {
+            while (Running) {
                 SDL_Event Event;
-                while(SDL_PollEvent(&Event))
-                {
-                    if (HandleEvent(&Event))
-                    {
+                while (SDL_PollEvent(&Event)) {
+                    if (HandleEvent(&Event)) {
                         Running = false;
                     }
                 }
@@ -193,16 +180,14 @@ int main(int argc, char *argv[])
                 YOffset += 2;
             }
         }
-        else
-        {
+        else {
             // TODO(casey): Logging
         }
     }
-    else
-    {
+    else {
         // TODO(casey): Logging
     }
 
     SDL_Quit();
-    return(0);
+    return (0);
 }
