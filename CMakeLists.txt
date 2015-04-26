@@ -12,6 +12,10 @@ set(SOURCE_FILES
     globals.c
     )
 
+set(LOGIC_SOURCE_FILES
+    debug_stuff.c
+)
+
 include_directories(${SDL_INCLUDE_DIR})
 link_libraries(SDL2)
 
@@ -22,3 +26,5 @@ add_definitions(-O0)
 add_definitions(-Wunused-variable)
 
 add_executable(hero ${SOURCE_FILES})
+
+add_library(herologic  MODULE ${LOGIC_SOURCE_FILES})

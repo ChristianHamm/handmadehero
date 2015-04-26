@@ -4,11 +4,15 @@
 
 #include "hero.h"
 
-void Hero_InitAudio() {
+Hero_AudioDef Hero_InitAudio() {
     SDL_zero(g_desired_audio_spec);
+
+    Hero_AudioDef audio_def;
+    SDL_zero(audio_def);
+
     g_desired_audio_spec.freq = k_audio_freq;
     g_desired_audio_spec.format = AUDIO_S16LSB;
-    g_desired_audio_spec.channels = k_audio_channels;
+    g_desired_audio_spec.channels = (Uint8) k_audio_channels;
     //g_desired_audio_spec.samples = 4096;
     g_desired_audio_spec.samples = (k_audio_freq *
                                     k_audio_bytes_per_sample /
@@ -25,14 +29,16 @@ void Hero_InitAudio() {
 
         if (g_audio_spec.format != g_desired_audio_spec.format)
             log_debug("Could not get desired audio format.\n");
-    }
-}
 
-void Hero_PutPixel(void *pixel_buffer, int pitch,
-                   const Uint32 x, const Uint32 y, const Uint32 color) {
-    Uint8 *pixel = (Uint8 *) pixel_buffer;
-    pixel += (y * pitch) + (x * sizeof(Uint32));
-    *((Uint32 *) pixel) = color;
+        audio_def.audio_device = g_audio_device;
+        audio_def.audio_freq = g_audio_spec.freq;
+        audio_def.audio_rate = k_audio_rate;
+        audio_def.audio_channels = g_audio_spec.channels;
+        audio_def.audio_bytes_per_sample = k_audio_bytes_per_sample;
+        audio_def.sdl_audioSpec = g_audio_spec;
+    }
+
+    return audio_def;
 }
 
 SDL_Cursor *Hero_InitSystemCursor(const char **image) {
@@ -66,4 +72,240 @@ SDL_Cursor *Hero_InitSystemCursor(const char **image) {
     }
     sscanf(image[4 + row], "%d,%d", &hot_x, &hot_y);
     return SDL_CreateCursor(data, mask, 32, 32, hot_x, hot_y);
+}
+
+void Hero_UpdateGraphics(SDL_Renderer *renderer) {
+    /*
+    if (g_pixel_buffer) if (SDL_UpdateTexture(g_texture, 0, g_pixel_buffer,
+                                              g_pixel_buffer_width *
+                                              k_bytes_per_pixel)) {
+        log_debug("Could not update g_texture!");
+        exit(-1);
+    }
+    SDL_RenderCopy(renderer, g_texture, 0, 0);
+    */
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderClear(renderer);
+    SDL_Rect rectangle;
+
+    rectangle.x = 0;
+    rectangle.y = 0;
+    rectangle.w = g_pixel_buffer_width;
+    rectangle.h = g_pixel_buffer_height;
+    SDL_RenderFillRect(renderer, &rectangle);
+
+    //Hero_DebugDrawRunningPixel(renderer);
+    SDL_RenderPresent(renderer);
+};
+
+void Hero_InitControllers() {
+    log_debug("Init controllers...");
+
+    if (g_game_controller)
+        SDL_GameControllerClose(g_game_controller);
+
+    g_num_game_controllers = SDL_NumJoysticks();
+    log_debug("Found %d controller(s)", g_num_game_controllers);
+    SDL_GameControllerEventState(SDL_IGNORE);
+
+    for (int i = 0; i < g_num_game_controllers; ++i) {
+        if (SDL_IsGameController(i)) {
+            g_game_controller = SDL_GameControllerOpen(i);
+            if (g_game_controller) {
+                log_debug("Controller #%d name %s", i,
+                          SDL_GameControllerNameForIndex(i));
+                SDL_GameControllerEventState(SDL_ENABLE);
+                break;
+            } else {
+                fprintf(stderr, "Could not open gamecontroller %i: %s\n", i,
+                        SDL_GetError());
+            }
+        }
+    }
+}
+
+int Hero_HandleEvents() {
+    int running = 1;
+    SDL_Event event;
+
+    if (SDL_PollEvent(&event)) {
+        if (event.type == SDL_QUIT) {
+            running = 0;
+        }
+
+        // Controller plugged in or out
+        if (event.type == SDL_CONTROLLERDEVICEADDED ||
+            event.type == SDL_CONTROLLERDEVICEREMOVED)
+            Hero_InitControllers();
+
+        // Controller DPad stuff
+        if (event.type == SDL_CONTROLLERBUTTONDOWN &&
+            event.cbutton.state == SDL_PRESSED) {
+            switch (event.cbutton.button) {
+                case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                    EVT_RIGHT = 1;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                    EVT_LEFT = 1;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                    EVT_UP = 1;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                    EVT_DOWN = 1;
+                    break;
+                default:
+                    break;
+            }
+
+        }
+
+        if (event.type == SDL_CONTROLLERBUTTONUP &&
+            event.cbutton.state == SDL_RELEASED) {
+            switch (event.cbutton.button) {
+                case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                    EVT_RIGHT = 0;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                    EVT_LEFT = 0;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                    EVT_UP = 0;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                    EVT_DOWN = 0;
+
+                default:
+                    break;
+            }
+        }
+
+        // Controller Axis stuff
+        if (event.type == SDL_CONTROLLERAXISMOTION) {
+            switch (event.caxis.axis) {
+                case SDL_CONTROLLER_AXIS_LEFTX:
+                    //log_debug("left axis: %d", event.caxis.value);
+                    if (event.caxis.value > 25000) {
+                        EVT_RIGHT = 1;
+                        EVT_LEFT = 0;
+                    }
+                    else if (event.caxis.value < -25000) {
+                        EVT_RIGHT = 0;
+                        EVT_LEFT = 1;
+                    }
+                    else {
+                        EVT_RIGHT = 0;
+                        EVT_LEFT = 0;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (event.type == SDL_KEYDOWN && event.key.state == SDL_PRESSED) {
+            log_debug("Key down %d - %s", event.key.keysym.sym,
+                      SDL_GetKeyName(event.key.keysym.sym));
+
+            switch (event.key.keysym.sym) {
+                case SDLK_RIGHT:
+                    EVT_RIGHT = 1;
+                    break;
+                case SDLK_LEFT:
+                    EVT_LEFT = 1;
+                    break;
+                case SDLK_UP:
+                    EVT_UP = 1;
+                    break;
+                case SDLK_DOWN:
+                    EVT_DOWN = 1;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (event.type == SDL_KEYUP && event.key.state == SDL_RELEASED) {
+            switch (event.key.keysym.sym) {
+                case SDLK_RIGHT:
+                    EVT_RIGHT = 0;
+                    break;
+                case SDLK_LEFT:
+                    EVT_LEFT = 0;
+                    break;
+                case SDLK_UP:
+                    EVT_UP = 0;
+                    break;
+                case SDLK_DOWN:
+                    EVT_DOWN = 0;
+                default:
+                    break;
+            }
+        }
+
+        if (event.type == SDL_WINDOWEVENT) {
+            SDL_Window *window = SDL_GetWindowFromID(event.window.windowID);
+            SDL_Renderer *renderer = SDL_GetRenderer(window);
+            switch (event.window.event) {
+                case SDL_WINDOWEVENT_EXPOSED:
+                    SDL_Log("Window %d exposed", event.window.windowID);
+                    g_pixel_buffer_width = (Uint32) event.window.data1;
+                    g_pixel_buffer_width = (Uint32) event.window.data2;
+                    Hero_UpdateGraphics(renderer);
+                    break;
+                case SDL_WINDOWEVENT_RESIZED:
+                    SDL_Log("Window %d resized to %dx%d",
+                            event.window.windowID, event.window.data1,
+                            event.window.data2);
+                    g_pixel_buffer_width = (Uint32) event.window.data1;
+                    g_pixel_buffer_width = (Uint32) event.window.data2;
+                    Hero_UpdateGraphics(renderer);
+                    break;
+
+                default:
+                    /*
+                    SDL_Log("Window %d got unknown event %d",
+                            event.window.windowID, event.window.event);
+                    */
+                    break;
+            }
+        }
+    }
+
+    return running;
+}
+
+void Hero_PrintSDLVersion() {
+    SDL_version compiled;
+    SDL_version linked;
+
+    Uint32 subsystem_video_mask = SDL_INIT_VIDEO;
+    Uint32 subsystem_audio_mask = SDL_INIT_AUDIO;
+
+    SDL_LogSetAllPriority(SDL_LOG_PRIORITY_DEBUG);
+    log_debug("Init");
+    log_debug("SDL Revision %s", SDL_GetRevision());
+
+    SDL_VERSION(&compiled);
+    SDL_GetVersion(&linked);
+    log_debug("Compiled against SDL version %d.%d.%d\n",
+              compiled.major, compiled.minor, compiled.patch);
+    log_debug("Linking against SDL version %d.%d.%d\n",
+              linked.major, linked.minor, linked.patch);
+
+    /* Check for two subsystems */
+    if (SDL_WasInit(subsystem_video_mask) == subsystem_video_mask) {
+        log_debug("Video initialized.");
+    } else {
+        log_debug("Video not initialized.");
+    }
+
+    if (SDL_WasInit(subsystem_audio_mask) == subsystem_audio_mask) {
+        log_debug("Audio initialized.");
+    } else {
+        log_debug("Audio not initialized.");
+    }
+
+    log_debug("sizeof(Uint32) = %ld", sizeof(Uint32));
+    log_debug("sizeof(Uint8) = %ld", sizeof(Uint8));
 }

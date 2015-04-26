@@ -5,11 +5,16 @@
 #ifndef HERO_PLATFORM_H
 #define HERO_PLATFORM_H
 
-void Hero_InitAudio();
-
-void Hero_PutPixel(void *pixel_buffer, int pitch,
-                   const Uint32 x, const Uint32 y, const Uint32 color);
+Hero_AudioDef Hero_InitAudio();
 
 SDL_Cursor *Hero_InitSystemCursor(const char **image);
+
+void Hero_UpdateGraphics(SDL_Renderer *renderer);
+
+void Hero_InitControllers();
+
+int Hero_HandleEvents();
+
+void Hero_PrintSDLVersion();
 
 #endif //HERO_PLATFORM_H
