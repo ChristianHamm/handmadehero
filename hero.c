@@ -6,97 +6,9 @@
  * Date: 25.02.2015
  *
  *************************************************************************** */
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <sys/mman.h>
-#include <SDL2/SDL.h>
 
-#define log_debug(...) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
+#include "hero.h"
 
-const Uint32 k_window_width = 960;
-const Uint32 k_window_height = 540;
-const double k_display_msmax = 1000.0 / 60;    // 30 FPS
-
-const Uint16 k_audio_freq = 48000;
-const Uint16 k_audio_rate = 60;
-const Uint16 k_audio_channels = 2;
-
-const Sint16 k_audio_bytes_per_sample = sizeof(Sint16) * 2;
-
-static SDL_Texture *g_texture;
-static void *g_pixel_buffer;
-static Uint32 g_pixel_buffer_height;
-static Uint32 g_pixel_buffer_width;
-static const Uint32 k_bytes_per_pixel = (Uint32) sizeof(Uint32);
-
-static SDL_AudioSpec g_desired_audio_spec, g_audio_spec;
-static SDL_AudioDeviceID g_audio_device;
-static char *g_audio_device_name;
-
-static SDL_GameController *g_game_controller = NULL;
-static int g_num_game_controllers = 0;
-static int EVT_RIGHT = 0;
-static int EVT_LEFT = 0;
-static int EVT_UP = 0;
-static int EVT_DOWN = 0;
-static int EVT_BTNA = 0;
-static int EVT_BTNB = 0;
-static int EVT_BTNX = 0;
-static int EVT_BTNY = 0;
-
-/* XPM */
-static const char *arrow[] = {
-        /* width height num_colors chars_per_pixel */
-        "    32    32        3            1",
-        /* colors */
-        "X c #000000",
-        ". c #ffffff",
-        "  c None",
-        /* pixels */
-        "                X               ",
-        "                X.              ",
-        "                X.              ",
-        "                X.              ",
-        "                X.              ",
-        "                X.              ",
-        "                 .              ",
-        "         XXXXXX   XXXXXX        ",
-        "          ......   ......       ",
-        "                X.              ",
-        "                X.              ",
-        "                X.              ",
-        "                X.              ",
-        "                X.              ",
-        "                X.              ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "                                ",
-        "0,0"
-};
-
-static SDL_Point mouse_position;
-
-void Hero_PutPixel(void *pixel_buffer, int pitch,
-                   const Uint32 x, const Uint32 y, const Uint32 color) {
-    Uint8 *pixel = (Uint8 *) pixel_buffer;
-    pixel += (y * pitch) + (x * sizeof(Uint32));
-    *((Uint32 *) pixel) = color;
-}
 
 void Hero_DebugDrawWeirdGradient() {
     const Uint32 width = g_pixel_buffer_width;
@@ -199,39 +111,6 @@ void Hero_ResizeTexture(SDL_Renderer *renderer, Uint32 width, Uint32 height) {
     memset(g_pixel_buffer, 0xff,
            g_pixel_buffer_width * g_pixel_buffer_height * k_bytes_per_pixel);
 
-}
-
-static SDL_Cursor *init_system_cursor(const char *image[]) {
-    int i, row, col;
-    Uint8 data[4 * 32];
-    Uint8 mask[4 * 32];
-    int hot_x, hot_y;
-
-    i = -1;
-    for (row = 0; row < 32; ++row) {
-        for (col = 0; col < 32; ++col) {
-            if (col % 8) {
-                data[i] <<= 1;
-                mask[i] <<= 1;
-            } else {
-                ++i;
-                data[i] = mask[i] = 0;
-            }
-            switch (image[4 + row][col]) {
-                case 'X':
-                    data[i] |= 0x01;
-                    mask[i] |= 0x01;
-                    break;
-                case '.':
-                    mask[i] |= 0x01;
-                    break;
-                case ' ':
-                    break;
-            }
-        }
-    }
-    sscanf(image[4 + row], "%d,%d", &hot_x, &hot_y);
-    return SDL_CreateCursor(data, mask, 32, 32, hot_x, hot_y);
 }
 
 void Hero_DebugDrawMouse(SDL_Renderer *renderer) {
@@ -485,8 +364,8 @@ void Hero_PrintSDLVersion() {
         log_debug("Audio not initialized.");
     }
 
-    log_debug("sizeof(Uint32) = %d", sizeof(Uint32));
-    log_debug("sizeof(Uint8) = %d", sizeof(Uint8));
+    log_debug("sizeof(Uint32) = %ld", sizeof(Uint32));
+    log_debug("sizeof(Uint8) = %ld", sizeof(Uint8));
 }
 
 void Hero_PlayTestSound() {
@@ -518,29 +397,7 @@ void Hero_PlayTestSound() {
     }
 }
 
-void Hero_InitAudio() {
-    SDL_zero(g_desired_audio_spec);
-    g_desired_audio_spec.freq = k_audio_freq;
-    g_desired_audio_spec.format = AUDIO_S16LSB;
-    g_desired_audio_spec.channels = k_audio_channels;
-    //g_desired_audio_spec.samples = 4096;
-    g_desired_audio_spec.samples = (k_audio_freq *
-                                    k_audio_bytes_per_sample /
-                                    k_audio_rate);
-    g_audio_device = SDL_OpenAudioDevice(g_audio_device_name, 0,
-                                         &g_desired_audio_spec,
-                                         &g_audio_spec,
-                                         SDL_AUDIO_ALLOW_ANY_CHANGE);
 
-    if (g_audio_device == 0) {
-        log_debug("Failed to open audio: %s\n", SDL_GetError());
-    } else {
-        log_debug("Opened audio device %s", g_audio_device_name);
-
-        if (g_audio_spec.format != g_desired_audio_spec.format)
-            log_debug("Could not get desired audio format.\n");
-    }
-}
 
 
 int main(int argc, char **argv) {
@@ -581,7 +438,7 @@ int main(int argc, char **argv) {
     Uint32 frame_step = 0;
     int running = 1;
 
-    SDL_SetCursor(init_system_cursor(arrow));
+    SDL_SetCursor(Hero_InitSystemCursor(arrow));
     SDL_ShowCursor(SDL_ENABLE);
 
     while (running) {

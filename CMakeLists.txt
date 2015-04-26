@@ -8,6 +8,8 @@ set(CMAKE_CXX_FLAGS
 
 set(SOURCE_FILES
     hero.c
+    platform.c
+    globals.c
     )
 
 include_directories(${SDL_INCLUDE_DIR})
