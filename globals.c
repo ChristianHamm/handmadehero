@@ -4,6 +4,8 @@
 
 #include "globals.h"
 
+void *g_logic_lib;
+
 const Uint32 k_window_width = 960;
 const Uint32 k_window_height = 540;
 const double k_display_msmax = 1000.0 / 60;    // 30 FPS

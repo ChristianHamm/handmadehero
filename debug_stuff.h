@@ -8,7 +8,8 @@
 #include "SDL2/SDL.h"
 #include "globals.h"
 
-void Hero_DebugDrawRunningPixel(SDL_Renderer *renderer);
+void Hero_DebugDrawRunningPixel(SDL_Renderer *renderer,
+                                Hero_GameState *game_state);
 
 void Hero_PlayTestSound(Hero_AudioDef audio_def);
 

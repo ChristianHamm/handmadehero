@@ -74,6 +74,19 @@ SDL_Cursor *Hero_InitSystemCursor(const char **image) {
     return SDL_CreateCursor(data, mask, 32, 32, hot_x, hot_y);
 }
 
+void Hero_UpdateGameState(Hero_GameState *game_state, Hero_GameInput
+*game_input) {
+    game_state->player_x +=
+            0 +
+            game_input->right * 8 -
+            game_input->left * 8;
+
+    game_state->player_y +=
+            0 +
+            game_input->down * 8 -
+            game_input->up * 8;
+}
+
 void Hero_UpdateGraphics(SDL_Renderer *renderer) {
     /*
     if (g_pixel_buffer) if (SDL_UpdateTexture(g_texture, 0, g_pixel_buffer,
@@ -94,8 +107,6 @@ void Hero_UpdateGraphics(SDL_Renderer *renderer) {
     rectangle.h = g_pixel_buffer_height;
     SDL_RenderFillRect(renderer, &rectangle);
 
-    //Hero_DebugDrawRunningPixel(renderer);
-    SDL_RenderPresent(renderer);
 };
 
 void Hero_InitControllers() {
@@ -124,7 +135,7 @@ void Hero_InitControllers() {
     }
 }
 
-int Hero_HandleEvents() {
+int Hero_HandleEvents(Hero_GameInput *game_input) {
     int running = 1;
     SDL_Event event;
 
@@ -143,42 +154,43 @@ int Hero_HandleEvents() {
             event.cbutton.state == SDL_PRESSED) {
             switch (event.cbutton.button) {
                 case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-                    EVT_RIGHT = 1;
+                    game_input->right = 1;
                     break;
                 case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-                    EVT_LEFT = 1;
+                    game_input->left = 1;
                     break;
                 case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                    EVT_UP = 1;
+                    game_input->up = 1;
                     break;
                 case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-                    EVT_DOWN = 1;
+                    game_input->down = 1;
                     break;
                 default:
                     break;
             }
-
         }
 
+        /*
         if (event.type == SDL_CONTROLLERBUTTONUP &&
             event.cbutton.state == SDL_RELEASED) {
             switch (event.cbutton.button) {
                 case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-                    EVT_RIGHT = 0;
+                    game_input.right = 0;
                     break;
                 case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-                    EVT_LEFT = 0;
+                    game_input.left = 0;
                     break;
                 case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                    EVT_UP = 0;
+                    game_input.up = 0;
                     break;
                 case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-                    EVT_DOWN = 0;
+                    game_input.down = 0;
 
                 default:
                     break;
             }
         }
+         */
 
         // Controller Axis stuff
         if (event.type == SDL_CONTROLLERAXISMOTION) {
@@ -186,16 +198,10 @@ int Hero_HandleEvents() {
                 case SDL_CONTROLLER_AXIS_LEFTX:
                     //log_debug("left axis: %d", event.caxis.value);
                     if (event.caxis.value > 25000) {
-                        EVT_RIGHT = 1;
-                        EVT_LEFT = 0;
+                        game_input->right = 1;
                     }
                     else if (event.caxis.value < -25000) {
-                        EVT_RIGHT = 0;
-                        EVT_LEFT = 1;
-                    }
-                    else {
-                        EVT_RIGHT = 0;
-                        EVT_LEFT = 0;
+                        game_input->left = 1;
                     }
                     break;
                 default:
@@ -209,16 +215,21 @@ int Hero_HandleEvents() {
 
             switch (event.key.keysym.sym) {
                 case SDLK_RIGHT:
-                    EVT_RIGHT = 1;
+                    log_debug("%p", game_input);
+                    game_input->right = 1;
+                    game_input->left = 0;
                     break;
                 case SDLK_LEFT:
-                    EVT_LEFT = 1;
+                    game_input->right = 0;
+                    game_input->left = 1;
                     break;
                 case SDLK_UP:
-                    EVT_UP = 1;
+                    game_input->up = 1;
+                    game_input->down = 0;
                     break;
                 case SDLK_DOWN:
-                    EVT_DOWN = 1;
+                    game_input->up = 0;
+                    game_input->down = 1;
                     break;
                 default:
                     break;
@@ -228,16 +239,16 @@ int Hero_HandleEvents() {
         if (event.type == SDL_KEYUP && event.key.state == SDL_RELEASED) {
             switch (event.key.keysym.sym) {
                 case SDLK_RIGHT:
-                    EVT_RIGHT = 0;
+                    game_input->right = 0;
                     break;
                 case SDLK_LEFT:
-                    EVT_LEFT = 0;
+                    game_input->left = 0;
                     break;
                 case SDLK_UP:
-                    EVT_UP = 0;
+                    game_input->up = 0;
                     break;
                 case SDLK_DOWN:
-                    EVT_DOWN = 0;
+                    game_input->down = 0;
                 default:
                     break;
             }

@@ -3,6 +3,7 @@
 //
 
 #include "hero.h"
+#include "debug_stuff.h"
 
 void Hero_PlayTestSound(Hero_AudioDef audio_def) {
     // Retain the position where we are in the audio test loop
@@ -35,12 +36,14 @@ void Hero_PlayTestSound(Hero_AudioDef audio_def) {
     }
 }
 
-void Hero_DebugDrawRunningPixel(SDL_Renderer *renderer) {
+void Hero_DebugDrawRunningPixel(SDL_Renderer *renderer,
+                                Hero_GameState *game_state) {
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    static SDL_Rect rectangle;
+    SDL_Rect rectangle;
 
-    rectangle.x += 0; // + EVT_RIGHT * 8 - EVT_LEFT * 8;
-    rectangle.y += 0; // + EVT_DOWN * 8 - EVT_UP * 8;
+    rectangle.x = game_state->player_x;
+    rectangle.y = game_state->player_y;
+
     rectangle.w = 50;
     rectangle.h = 50;
     SDL_RenderFillRect(renderer, &rectangle);

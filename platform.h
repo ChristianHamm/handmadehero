@@ -9,11 +9,14 @@ Hero_AudioDef Hero_InitAudio();
 
 SDL_Cursor *Hero_InitSystemCursor(const char **image);
 
+void Hero_UpdateGameState(Hero_GameState *game_state,
+                          Hero_GameInput *game_input);
+
 void Hero_UpdateGraphics(SDL_Renderer *renderer);
 
 void Hero_InitControllers();
 
-int Hero_HandleEvents();
+int Hero_HandleEvents(Hero_GameInput *game_input);
 
 void Hero_PrintSDLVersion();
 

@@ -7,6 +7,8 @@
 
 #include <SDL2/SDL.h>
 
+extern void *g_logic_lib;
+
 extern const Uint32 k_window_width;
 extern const Uint32 k_window_height;
 extern const double k_display_msmax;
@@ -50,14 +52,11 @@ typedef struct _Hero_GameInput {
     int btny;
 } Hero_GameInput;
 
-extern int EVT_RIGHT;
-extern int EVT_LEFT;
-extern int EVT_UP;
-extern int EVT_DOWN;
-extern int EVT_BTNA;
-extern int EVT_BTNB;
-extern int EVT_BTNX;
-extern int EVT_BTNY;
+typedef struct _Hero_GameState {
+    int player_x;
+    int player_y;
+} Hero_GameState;
+
 
 extern SDL_Point mouse_position;
 
