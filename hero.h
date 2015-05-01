@@ -15,5 +15,6 @@
 
 #include "globals.h"
 #include "platform.h"
+#include "debug_stuff.h"
 
 #endif //HERO_HERO_H

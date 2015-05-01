@@ -9,10 +9,13 @@
 
 #include "hero.h"
 
+// Dynamic loading of functions
+#ifdef HERO_DYNLOAD
 typedef void *(*_Hero_PlayTestSound)(Hero_AudioDef audio_def);
 
 typedef void *(*_Hero_DebugDrawRunningPixel)(SDL_Renderer *renderer,
                                              Hero_GameState *game_state);
+#endif
 
 int main(int argc, char **argv) {
     // Init stuff
@@ -40,8 +43,8 @@ int main(int argc, char **argv) {
     // Initially set the pixel buffer dimensions
     int window_w, window_h;
     SDL_GetWindowSize(window, &window_w, &window_h);
-    g_pixel_buffer_width = (Uint32) window_w;
-    g_pixel_buffer_height = (Uint32) window_h;
+    g_current_screen_width = (Uint32) window_w;
+    g_current_screen_height = (Uint32) window_h;
     //Hero_ResizeTexture(renderer, (Uint32) window_w, (Uint32) window_h);
 
     // Loop things
@@ -52,12 +55,14 @@ int main(int argc, char **argv) {
     SDL_SetCursor(Hero_InitSystemCursor(arrow));
     SDL_ShowCursor(SDL_ENABLE);
 
+#ifdef HERO_DYNLOAD
     g_logic_lib = SDL_LoadObject("libherologic.so");
     _Hero_PlayTestSound Hero_PlayTestSound = SDL_LoadFunction(g_logic_lib,
                                                               "Hero_PlayTestSound");
     _Hero_DebugDrawRunningPixel Hero_DebugDrawRunningPixel = SDL_LoadFunction(
             g_logic_lib,
             "Hero_DebugDrawRunningPixel");
+#endif
 
     Hero_GameInput *game_input = malloc(sizeof(Hero_GameInput));
     SDL_zerop(game_input);
@@ -70,6 +75,7 @@ int main(int argc, char **argv) {
         Uint64 perf_freq = SDL_GetPerformanceFrequency();
         Uint64 perf_counter_start = SDL_GetPerformanceCounter();
 
+#ifdef HERO_DYNLOAD
         // Load our library every n frames
         if ((frame_step % 120) == 0) {
             SDL_UnloadObject(g_logic_lib);
@@ -81,6 +87,7 @@ int main(int argc, char **argv) {
                     g_logic_lib,
                     "Hero_DebugDrawRunningPixel");
         }
+#endif
 
         // Actual game stuff
         running = Hero_HandleEvents(game_input);
@@ -126,16 +133,6 @@ int main(int argc, char **argv) {
 
     if (g_game_controller != NULL)
         SDL_GameControllerClose(g_game_controller);
-
-    /*
-    if (g_pixel_buffer)
-        munmap(g_pixel_buffer,
-               g_pixel_buffer_width * g_pixel_buffer_height *
-               k_bytes_per_pixel);
-               */
-
-    if (g_texture)
-        SDL_DestroyTexture(g_texture);
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

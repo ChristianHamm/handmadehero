@@ -16,12 +16,9 @@ const Uint16 k_audio_channels = 2;
 
 const Sint16 k_audio_bytes_per_sample = sizeof(Sint16) * 2;
 
-SDL_Texture *g_texture;
-void *g_pixel_buffer;
-Uint32 g_pixel_buffer_height;
-Uint32 g_pixel_buffer_width;
-const Uint32 k_bytes_per_pixel = (Uint32)
-        sizeof(Uint32);
+Uint32 g_current_screen_height;
+Uint32 g_current_screen_width;
+const Uint32 k_bytes_per_pixel = (Uint32) sizeof(Uint32);
 
 SDL_AudioSpec g_desired_audio_spec, g_audio_spec;
 SDL_AudioDeviceID g_audio_device;
@@ -29,14 +26,7 @@ char *g_audio_device_name;
 
 SDL_GameController *g_game_controller = NULL;
 int g_num_game_controllers = 0;
-int EVT_RIGHT = 0;
-int EVT_LEFT = 0;
-int EVT_UP = 0;
-int EVT_DOWN = 0;
-int EVT_BTNA = 0;
-int EVT_BTNB = 0;
-int EVT_BTNX = 0;
-int EVT_BTNY = 0;
+
 SDL_Point mouse_position;
 
 const char *arrow[] = {

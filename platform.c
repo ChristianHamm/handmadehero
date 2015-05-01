@@ -90,7 +90,7 @@ void Hero_UpdateGameState(Hero_GameState *game_state, Hero_GameInput
 void Hero_UpdateGraphics(SDL_Renderer *renderer) {
     /*
     if (g_pixel_buffer) if (SDL_UpdateTexture(g_texture, 0, g_pixel_buffer,
-                                              g_pixel_buffer_width *
+                                              g_current_screen_width *
                                               k_bytes_per_pixel)) {
         log_debug("Could not update g_texture!");
         exit(-1);
@@ -103,8 +103,8 @@ void Hero_UpdateGraphics(SDL_Renderer *renderer) {
 
     rectangle.x = 0;
     rectangle.y = 0;
-    rectangle.w = g_pixel_buffer_width;
-    rectangle.h = g_pixel_buffer_height;
+    rectangle.w = g_current_screen_width;
+    rectangle.h = g_current_screen_height;
     SDL_RenderFillRect(renderer, &rectangle);
 
 };
@@ -260,16 +260,16 @@ int Hero_HandleEvents(Hero_GameInput *game_input) {
             switch (event.window.event) {
                 case SDL_WINDOWEVENT_EXPOSED:
                     SDL_Log("Window %d exposed", event.window.windowID);
-                    g_pixel_buffer_width = (Uint32) event.window.data1;
-                    g_pixel_buffer_width = (Uint32) event.window.data2;
+                    g_current_screen_width = (Uint32) event.window.data1;
+                    g_current_screen_width = (Uint32) event.window.data2;
                     Hero_UpdateGraphics(renderer);
                     break;
                 case SDL_WINDOWEVENT_RESIZED:
                     SDL_Log("Window %d resized to %dx%d",
                             event.window.windowID, event.window.data1,
                             event.window.data2);
-                    g_pixel_buffer_width = (Uint32) event.window.data1;
-                    g_pixel_buffer_width = (Uint32) event.window.data2;
+                    g_current_screen_width = (Uint32) event.window.data1;
+                    g_current_screen_width = (Uint32) event.window.data2;
                     Hero_UpdateGraphics(renderer);
                     break;
 

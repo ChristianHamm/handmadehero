@@ -10,6 +10,7 @@ set(SOURCE_FILES
     hero.c
     platform.c
     globals.c
+    debug_stuff.c
     )
 
 set(LOGIC_SOURCE_FILES

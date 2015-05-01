@@ -28,10 +28,8 @@ typedef struct _Hero_AudioDef {
     SDL_AudioSpec sdl_audioSpec;
 } Hero_AudioDef;
 
-extern SDL_Texture *g_texture;
-extern void *g_pixel_buffer;
-extern Uint32 g_pixel_buffer_height;
-extern Uint32 g_pixel_buffer_width;
+extern Uint32 g_current_screen_height;
+extern Uint32 g_current_screen_width;
 extern const Uint32 k_bytes_per_pixel;
 
 extern SDL_AudioSpec g_desired_audio_spec, g_audio_spec;
