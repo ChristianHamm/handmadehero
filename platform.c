@@ -74,17 +74,33 @@ SDL_Cursor *Hero_InitSystemCursor(const char **image) {
     return SDL_CreateCursor(data, mask, 32, 32, hot_x, hot_y);
 }
 
-void Hero_UpdateGameState(Hero_GameState *game_state, Hero_GameInput
-*game_input) {
-    game_state->player_x +=
-            0 +
-            game_input->right * 8 -
-            game_input->left * 8;
+void Hero_UpdateGameState(Hero_GameState *game_state,
+                          Hero_GameInput *game_input) {
+    if (game_input->right && game_input->down
+        || game_input->right && game_input->up
+        || game_input->left && game_input->down
+        || game_input->left && game_input->up) {
+        game_state->player_x +=
+                0 +
+                game_input->right * 6 -
+                game_input->left * 6;
 
-    game_state->player_y +=
-            0 +
-            game_input->down * 8 -
-            game_input->up * 8;
+        game_state->player_y +=
+                0 +
+                game_input->down * 6 -
+                game_input->up * 6;
+
+    } else {
+        game_state->player_x +=
+                0 +
+                game_input->right * 8 -
+                game_input->left * 8;
+
+        game_state->player_y +=
+                0 +
+                game_input->down * 8 -
+                game_input->up * 8;
+    }
 }
 
 void Hero_UpdateGraphics(SDL_Renderer *renderer) {
@@ -100,6 +116,9 @@ void Hero_UpdateGraphics(SDL_Renderer *renderer) {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
     SDL_Rect rectangle;
+
+    SDL_assert(g_current_screen_height > 0);
+    SDL_assert(g_current_screen_width > 0);
 
     rectangle.x = 0;
     rectangle.y = 0;
@@ -260,8 +279,9 @@ int Hero_HandleEvents(Hero_GameInput *game_input) {
             switch (event.window.event) {
                 case SDL_WINDOWEVENT_EXPOSED:
                     SDL_Log("Window %d exposed", event.window.windowID);
+
                     g_current_screen_width = (Uint32) event.window.data1;
-                    g_current_screen_width = (Uint32) event.window.data2;
+                    g_current_screen_height = (Uint32) event.window.data2;
                     Hero_UpdateGraphics(renderer);
                     break;
                 case SDL_WINDOWEVENT_RESIZED:
@@ -269,7 +289,7 @@ int Hero_HandleEvents(Hero_GameInput *game_input) {
                             event.window.windowID, event.window.data1,
                             event.window.data2);
                     g_current_screen_width = (Uint32) event.window.data1;
-                    g_current_screen_width = (Uint32) event.window.data2;
+                    g_current_screen_height = (Uint32) event.window.data2;
                     Hero_UpdateGraphics(renderer);
                     break;
 
