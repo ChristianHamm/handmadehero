@@ -37,6 +37,15 @@ int main(int argc, char **argv) {
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1,
                                                 SDL_RENDERER_PRESENTVSYNC);
 
+    // Just output the viewport
+    SDL_Rect *viewport = SDL_malloc(sizeof(SDL_Rect));
+    SDL_RenderGetViewport(renderer, viewport);
+    SDL_free(viewport);
+
+    log_debug("got viewport: x: %d, y: %d, h: %d, w: %d", viewport->x,
+              viewport->y, viewport->h, viewport->w);
+
+    // Initially clear the screen
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
 
@@ -102,7 +111,7 @@ int main(int argc, char **argv) {
         SDL_RenderPresent(renderer);
 
         // Playing test sound
-        Hero_PlayTestSound(audio_def);
+        //Hero_PlayTestSound(audio_def);
 
         if (!sound_is_playing) {
             SDL_PauseAudioDevice(g_audio_device, 1);
@@ -119,11 +128,12 @@ int main(int argc, char **argv) {
         // Ensure we are at a constant framerate
         double fps_padding_time = k_display_msmax - perf_per_frame;
 
-        if (fps_padding_time > 0)
-            SDL_Delay((Uint32) fps_padding_time);
+//        if (fps_padding_time > 0)
+//            SDL_Delay((Uint32) fps_padding_time);
 
         if ((frame_step % 120) == 0)
-            log_debug("Frame time %d: %f, maxms %f, padding %f", frame_step,
+            log_debug("Frame time %d: %f ms, max %f ms, padding %f ms",
+                      frame_step,
                       perf_per_frame, k_display_msmax, fps_padding_time);
 
         frame_step++;
