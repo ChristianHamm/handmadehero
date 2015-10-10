@@ -5,7 +5,7 @@
 #ifndef HERO_GLOBALS_H
 #define HERO_GLOBALS_H
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 extern void *g_logic_lib;
 
@@ -55,6 +55,7 @@ typedef struct _Hero_GameState {
     int player_y;
 } Hero_GameState;
 
+extern SDL_Surface *g_backbuffer;
 
 extern SDL_Point mouse_position;
 

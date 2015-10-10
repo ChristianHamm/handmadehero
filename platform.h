@@ -12,11 +12,11 @@ SDL_Cursor *Hero_InitSystemCursor(const char **image);
 void Hero_UpdateGameState(Hero_GameState *game_state,
                           Hero_GameInput *game_input);
 
-void Hero_UpdateGraphics(SDL_Renderer *renderer);
+void Hero_ResizeAndUpdateWindow(SDL_Window *window, SDL_Surface *surface);
 
 void Hero_InitControllers();
 
-int Hero_HandleEvents(Hero_GameInput *game_input);
+SDL_bool Hero_HandleEvents(Hero_GameInput *game_input);
 
 void Hero_PrintSDLVersion();
 

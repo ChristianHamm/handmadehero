@@ -34,32 +34,15 @@ int main(int argc, char **argv) {
             k_window_width, k_window_height,
             SDL_WINDOW_RESIZABLE);
 
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1,
-                                                SDL_RENDERER_PRESENTVSYNC);
-
-    // Just output the viewport
-    SDL_Rect *viewport = SDL_malloc(sizeof(SDL_Rect));
-    SDL_RenderGetViewport(renderer, viewport);
-    SDL_free(viewport);
-
-    log_debug("got viewport: x: %d, y: %d, h: %d, w: %d", viewport->x,
-              viewport->y, viewport->h, viewport->w);
-
-    // Initially clear the screen
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderClear(renderer);
-
-    // Initially set the pixel buffer dimensions
-    int window_w, window_h;
-    SDL_GetWindowSize(window, &window_w, &window_h);
-    g_current_screen_width = (Uint32) window_w;
-    g_current_screen_height = (Uint32) window_h;
-    //Hero_ResizeTexture(renderer, (Uint32) window_w, (Uint32) window_h);
+    // Get the window surface, make a copy of it and update the window
+    SDL_Surface *source = SDL_GetWindowSurface(window);
+    g_backbuffer = SDL_ConvertSurfaceFormat(source, source->format->format, 0);
+    Hero_ResizeAndUpdateWindow(window, g_backbuffer);
 
     // Loop things
-    int sound_is_playing = 0;
+    SDL_bool sound_is_playing = SDL_FALSE;
     Uint32 frame_step = 0;
-    int running = 1;
+    SDL_bool running = SDL_TRUE;
 
     SDL_SetCursor(Hero_InitSystemCursor(arrow));
     SDL_ShowCursor(SDL_ENABLE);
@@ -73,11 +56,14 @@ int main(int argc, char **argv) {
             "Hero_DebugDrawRunningPixel");
 #endif
 
-    Hero_GameInput *game_input = malloc(sizeof(Hero_GameInput));
+    Hero_GameInput *game_input = SDL_malloc(sizeof(Hero_GameInput));
     SDL_zerop(game_input);
 
-    Hero_GameState *game_state = malloc(sizeof(Hero_GameState));
+    Hero_GameState *game_state = SDL_malloc(sizeof(Hero_GameState));
     SDL_zerop(game_state);
+
+    int xoffset = 0;
+    int yoffset = 0;
 
     while (running) {
         // Performance
@@ -101,21 +87,21 @@ int main(int argc, char **argv) {
         // Actual game stuff
         running = Hero_HandleEvents(game_input);
         SDL_GetMouseState(&mouse_position.x, &mouse_position.y);
-        //Hero_DebugDrawGradient(frame_step);
-        //Hero_DebugDrawWeirdGradient();
-
         Hero_UpdateGameState(game_state, game_input);
-        Hero_UpdateGraphics(renderer);
-        Hero_DebugDrawRunningPixel(renderer, game_state);
 
-        SDL_RenderPresent(renderer);
+        xoffset -= 4 * game_input->left;
+        xoffset += 4 * game_input->right;
+        yoffset -= 4 * game_input->up;
+        yoffset += 4 * game_input->down;
 
+        Hero_DebugDrawWeirdGradient(g_backbuffer, xoffset, yoffset);
+        Hero_ResizeAndUpdateWindow(window, g_backbuffer);
         // Playing test sound
         //Hero_PlayTestSound(audio_def);
 
         if (!sound_is_playing) {
             SDL_PauseAudioDevice(g_audio_device, 1);
-            sound_is_playing = 1;
+            sound_is_playing = SDL_FALSE;
         }
 
         // Performance
@@ -128,10 +114,10 @@ int main(int argc, char **argv) {
         // Ensure we are at a constant framerate
         double fps_padding_time = k_display_msmax - perf_per_frame;
 
-//        if (fps_padding_time > 0)
-//            SDL_Delay((Uint32) fps_padding_time);
+        if (fps_padding_time > 0)
+            SDL_Delay((Uint32) fps_padding_time);
 
-        if ((frame_step % 120) == 0)
+        if ((frame_step % 320) == 0)
             log_debug("Frame time %d: %f ms, max %f ms, padding %f ms",
                       frame_step,
                       perf_per_frame, k_display_msmax, fps_padding_time);
@@ -144,9 +130,7 @@ int main(int argc, char **argv) {
     if (g_game_controller != NULL)
         SDL_GameControllerClose(g_game_controller);
 
-    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-
     SDL_Quit();
     return 0;
 }

@@ -5,11 +5,9 @@
 #ifndef HERO_DEBUG_STUFF_H
 #define HERO_DEBUG_STUFF_H
 
-#include "SDL2/SDL.h"
 #include "globals.h"
 
-void Hero_DebugDrawRunningPixel(SDL_Renderer *renderer,
-                                Hero_GameState *game_state);
+void Hero_DebugDrawWeirdGradient(SDL_Surface *surface, int xoffset, int yoffset);
 
 void Hero_PlayTestSound(Hero_AudioDef audio_def);
 

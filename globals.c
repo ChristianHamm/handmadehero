@@ -28,6 +28,7 @@ SDL_GameController *g_game_controller = NULL;
 int g_num_game_controllers = 0;
 
 SDL_Point mouse_position;
+SDL_Surface *g_backbuffer = NULL;
 
 const char *arrow[] = {
         /* width height num_colors chars_per_pixel */

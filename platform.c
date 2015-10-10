@@ -76,10 +76,10 @@ SDL_Cursor *Hero_InitSystemCursor(const char **image) {
 
 void Hero_UpdateGameState(Hero_GameState *game_state,
                           Hero_GameInput *game_input) {
-    if (game_input->right && game_input->down
-        || game_input->right && game_input->up
-        || game_input->left && game_input->down
-        || game_input->left && game_input->up) {
+    if ((game_input->right && game_input->down)
+        || (game_input->right && game_input->up)
+        || (game_input->left && game_input->down)
+        || (game_input->left && game_input->up)) {
         game_state->player_x +=
                 0 +
                 game_input->right * 6 -
@@ -103,30 +103,7 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
     }
 }
 
-void Hero_UpdateGraphics(SDL_Renderer *renderer) {
-    /*
-    if (g_pixel_buffer) if (SDL_UpdateTexture(g_texture, 0, g_pixel_buffer,
-                                              g_current_screen_width *
-                                              k_bytes_per_pixel)) {
-        log_debug("Could not update g_texture!");
-        exit(-1);
-    }
-    SDL_RenderCopy(renderer, g_texture, 0, 0);
-    */
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderClear(renderer);
-    SDL_Rect rectangle;
 
-    SDL_assert(g_current_screen_height > 0);
-    SDL_assert(g_current_screen_width > 0);
-
-    rectangle.x = 0;
-    rectangle.y = 0;
-    rectangle.w = g_current_screen_width;
-    rectangle.h = g_current_screen_height;
-    SDL_RenderFillRect(renderer, &rectangle);
-
-};
 
 void Hero_InitControllers() {
     log_debug("Init controllers...");
@@ -154,13 +131,13 @@ void Hero_InitControllers() {
     }
 }
 
-int Hero_HandleEvents(Hero_GameInput *game_input) {
-    int running = 1;
+SDL_bool Hero_HandleEvents(Hero_GameInput *game_input) {
+    SDL_bool running = SDL_TRUE;
     SDL_Event event;
 
     if (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) {
-            running = 0;
+            running = SDL_FALSE;
         }
 
         // Controller plugged in or out
@@ -189,28 +166,6 @@ int Hero_HandleEvents(Hero_GameInput *game_input) {
             }
         }
 
-        /*
-        if (event.type == SDL_CONTROLLERBUTTONUP &&
-            event.cbutton.state == SDL_RELEASED) {
-            switch (event.cbutton.button) {
-                case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-                    game_input.right = 0;
-                    break;
-                case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-                    game_input.left = 0;
-                    break;
-                case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                    game_input.up = 0;
-                    break;
-                case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-                    game_input.down = 0;
-
-                default:
-                    break;
-            }
-        }
-         */
-
         // Controller Axis stuff
         if (event.type == SDL_CONTROLLERAXISMOTION) {
             switch (event.caxis.axis) {
@@ -234,7 +189,6 @@ int Hero_HandleEvents(Hero_GameInput *game_input) {
 
             switch (event.key.keysym.sym) {
                 case SDLK_RIGHT:
-                    log_debug("%p", game_input);
                     game_input->right = 1;
                     game_input->left = 0;
                     break;
@@ -274,36 +228,33 @@ int Hero_HandleEvents(Hero_GameInput *game_input) {
         }
 
         if (event.type == SDL_WINDOWEVENT) {
+            // Always update the graphics when we get an window event
             SDL_Window *window = SDL_GetWindowFromID(event.window.windowID);
-            SDL_Renderer *renderer = SDL_GetRenderer(window);
-            switch (event.window.event) {
-                case SDL_WINDOWEVENT_EXPOSED:
-                    SDL_Log("Window %d exposed", event.window.windowID);
+            Hero_ResizeAndUpdateWindow(window, g_backbuffer);
 
-                    g_current_screen_width = (Uint32) event.window.data1;
-                    g_current_screen_height = (Uint32) event.window.data2;
-                    Hero_UpdateGraphics(renderer);
-                    break;
+            switch (event.window.event) {
                 case SDL_WINDOWEVENT_RESIZED:
                     SDL_Log("Window %d resized to %dx%d",
                             event.window.windowID, event.window.data1,
                             event.window.data2);
-                    g_current_screen_width = (Uint32) event.window.data1;
-                    g_current_screen_height = (Uint32) event.window.data2;
-                    Hero_UpdateGraphics(renderer);
+                    // Stretch the window
                     break;
-
                 default:
-                    /*
                     SDL_Log("Window %d got unknown event %d",
                             event.window.windowID, event.window.event);
-                    */
                     break;
             }
         }
     }
 
     return running;
+}
+
+void Hero_ResizeAndUpdateWindow(SDL_Window *window, SDL_Surface *surface) {
+   SDL_Surface *current_surface = SDL_GetWindowSurface(window);
+
+   SDL_SoftStretch(surface, NULL, current_surface, NULL);
+   SDL_UpdateWindowSurface(window);
 }
 
 void Hero_PrintSDLVersion() {
