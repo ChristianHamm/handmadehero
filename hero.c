@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
     SDL_Surface *source = SDL_GetWindowSurface(window);
     g_backbuffer = SDL_ConvertSurfaceFormat(source, source->format->format, 0);
     Hero_ResizeAndUpdateWindow(window, g_backbuffer);
+    SDL_FreeSurface(source);
 
     // Loop things
     SDL_bool sound_is_playing = SDL_FALSE;
@@ -99,10 +100,12 @@ int main(int argc, char **argv) {
         // Playing test sound
         //Hero_PlayTestSound(audio_def);
 
+        /*
         if (!sound_is_playing) {
             SDL_PauseAudioDevice(g_audio_device, 1);
             sound_is_playing = SDL_FALSE;
         }
+         */
 
         // Performance
         Uint64 perf_counter_end = SDL_GetPerformanceCounter();
@@ -118,8 +121,7 @@ int main(int argc, char **argv) {
             SDL_Delay((Uint32) fps_padding_time);
 
         if ((frame_step % 320) == 0)
-            log_debug("Frame time %d: %f ms, max %f ms, padding %f ms",
-                      frame_step,
+            log_debug("Frame stats: %f ms, max %f ms, padding %f ms",
                       perf_per_frame, k_display_msmax, fps_padding_time);
 
         frame_step++;
