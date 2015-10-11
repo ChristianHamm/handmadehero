@@ -103,8 +103,6 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
     }
 }
 
-
-
 void Hero_InitControllers() {
     log_debug("Init controllers...");
 
@@ -151,15 +149,43 @@ SDL_bool Hero_HandleEvents(Hero_GameInput *game_input) {
             switch (event.cbutton.button) {
                 case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
                     game_input->right = 1;
+                    game_input->left = 0;
                     break;
                 case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                    game_input->right = 0;
                     game_input->left = 1;
                     break;
                 case SDL_CONTROLLER_BUTTON_DPAD_UP:
                     game_input->up = 1;
+                    game_input->down = 0;
                     break;
                 case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                    game_input->up = 0;
                     game_input->down = 1;
+                    break;
+                case SDL_CONTROLLER_BUTTON_BACK:
+                    running = SDL_FALSE;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // Controller DPad stuff
+        if (event.type == SDL_CONTROLLERBUTTONUP &&
+            event.cbutton.state == SDL_RELEASED) {
+            switch (event.cbutton.button) {
+                case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                    game_input->right = 0;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                    game_input->left = 0;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                    game_input->up = 0;
+                    break;
+                case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                    game_input->down = 0;
                     break;
                 default:
                     break;
@@ -167,39 +193,60 @@ SDL_bool Hero_HandleEvents(Hero_GameInput *game_input) {
         }
 
         // Controller Axis stuff
+        /*
         if (event.type == SDL_CONTROLLERAXISMOTION) {
             switch (event.caxis.axis) {
                 case SDL_CONTROLLER_AXIS_LEFTX:
-                    //log_debug("left axis: %d", event.caxis.value);
-                    if (event.caxis.value > 25000) {
+                    log_debug("left axis: %d", event.caxis.value);
+                    if (event.caxis.value > 15500) {
                         game_input->right = 1;
                     }
-                    else if (event.caxis.value < -25000) {
+                    else if (event.caxis.value < -15500) {
                         game_input->left = 1;
+                    } else {
+                        game_input->left = 0;
+                        game_input->right = 0;
+                    }
+                    break;
+                case SDL_CONTROLLER_AXIS_LEFTY:
+                    //log_debug("left axis: %d", event.caxis.value);
+                    if (event.caxis.value > 15500) {
+                        game_input->down = 1;
+                    }
+                    else if (event.caxis.value < -15500) {
+                        game_input->up = 1;
+                    } else {
+                        game_input->up = 0;
+                        game_input->down = 0;
                     }
                     break;
                 default:
                     break;
             }
         }
+         */
 
         if (event.type == SDL_KEYDOWN && event.key.state == SDL_PRESSED) {
             log_debug("Key down %d - %s", event.key.keysym.sym,
                       SDL_GetKeyName(event.key.keysym.sym));
 
             switch (event.key.keysym.sym) {
+                case SDLK_d:
                 case SDLK_RIGHT:
                     game_input->right = 1;
                     game_input->left = 0;
                     break;
+                case SDLK_a:
                 case SDLK_LEFT:
                     game_input->right = 0;
                     game_input->left = 1;
                     break;
+                case SDLK_w:
                 case SDLK_UP:
                     game_input->up = 1;
                     game_input->down = 0;
                     break;
+                case SDLK_s:
                 case SDLK_DOWN:
                     game_input->up = 0;
                     game_input->down = 1;
@@ -211,15 +258,19 @@ SDL_bool Hero_HandleEvents(Hero_GameInput *game_input) {
 
         if (event.type == SDL_KEYUP && event.key.state == SDL_RELEASED) {
             switch (event.key.keysym.sym) {
+                case SDLK_d:
                 case SDLK_RIGHT:
                     game_input->right = 0;
                     break;
+                case SDLK_a:
                 case SDLK_LEFT:
                     game_input->left = 0;
                     break;
+                case SDLK_w:
                 case SDLK_UP:
                     game_input->up = 0;
                     break;
+                case SDLK_s:
                 case SDLK_DOWN:
                     game_input->down = 0;
                 default:
