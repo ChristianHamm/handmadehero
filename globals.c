@@ -8,7 +8,7 @@ void *g_logic_lib;
 
 const Uint32 k_window_width = 960;
 const Uint32 k_window_height = 540;
-const double k_display_msmax = 1000.0 / 60;    // 30 FPS
+const double k_display_msmax = 1000.0 / 30;    // 30 FPS
 
 const Uint16 k_audio_freq = 48000;
 const Uint16 k_audio_rate = 60;
@@ -27,7 +27,7 @@ char *g_audio_device_name;
 SDL_GameController *g_game_controller = NULL;
 int g_num_game_controllers = 0;
 
-SDL_Point mouse_position;
+SDL_Point g_mouse_position;
 SDL_Surface *g_backbuffer = NULL;
 
 const char *arrow[] = {

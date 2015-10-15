@@ -74,34 +74,7 @@ SDL_Cursor *Hero_InitSystemCursor(const char **image) {
     return SDL_CreateCursor(data, mask, 32, 32, hot_x, hot_y);
 }
 
-void Hero_UpdateGameState(Hero_GameState *game_state,
-                          Hero_GameInput *game_input) {
-    if ((game_input->right && game_input->down)
-        || (game_input->right && game_input->up)
-        || (game_input->left && game_input->down)
-        || (game_input->left && game_input->up)) {
-        game_state->player_x +=
-                0 +
-                game_input->right * 6 -
-                game_input->left * 6;
 
-        game_state->player_y +=
-                0 +
-                game_input->down * 6 -
-                game_input->up * 6;
-
-    } else {
-        game_state->player_x +=
-                0 +
-                game_input->right * 8 -
-                game_input->left * 8;
-
-        game_state->player_y +=
-                0 +
-                game_input->down * 8 -
-                game_input->up * 8;
-    }
-}
 
 void Hero_InitControllers() {
     log_debug("Init controllers...");
@@ -281,7 +254,7 @@ SDL_bool Hero_HandleEvents(Hero_GameInput *game_input) {
         if (event.type == SDL_WINDOWEVENT) {
             // Always update the graphics when we get an window event
             SDL_Window *window = SDL_GetWindowFromID(event.window.windowID);
-            Hero_ResizeAndUpdateWindow(window, g_backbuffer);
+            Hero_ResizeAndUpdateWindow(window, g_backbuffer, SDL_TRUE);
 
             switch (event.window.event) {
                 case SDL_WINDOWEVENT_RESIZED:
@@ -301,11 +274,13 @@ SDL_bool Hero_HandleEvents(Hero_GameInput *game_input) {
     return running;
 }
 
-void Hero_ResizeAndUpdateWindow(SDL_Window *window, SDL_Surface *surface) {
-   SDL_Surface *current_surface = SDL_GetWindowSurface(window);
+void Hero_ResizeAndUpdateWindow(SDL_Window *window, SDL_Surface *surface,
+                                SDL_bool forceStretch) {
+    //log_debug("Hero_ResizeAndUpdateWindow");
+    SDL_Surface *current_surface = SDL_GetWindowSurface(window);
 
-   SDL_SoftStretch(surface, NULL, current_surface, NULL);
-   SDL_UpdateWindowSurface(window);
+    SDL_SoftStretch(surface, NULL, current_surface, NULL);
+    SDL_UpdateWindowSurface(window);
 }
 
 void Hero_PrintSDLVersion() {

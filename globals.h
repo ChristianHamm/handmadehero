@@ -53,11 +53,30 @@ typedef struct _Hero_GameInput {
 typedef struct _Hero_GameState {
     int player_x;
     int player_y;
+
+    int gradient_xoffset;
+    int gradient_yoffset;
 } Hero_GameState;
+
+// TODO(cha) I don't know if we need this
+typedef struct _Hero_GameMemory {
+    Uint64 perm_store_size;
+    void *perm_store;
+
+} Hero_GameMemory;
+
+typedef struct _Hero_GameClocks {
+
+} Hero_GameClocks;
+
+typedef struct _Hero_RecordedInput {
+    int input_count;
+    Hero_GameInput *input_stream;
+} Hero_RecordedInput;
 
 extern SDL_Surface *g_backbuffer;
 
-extern SDL_Point mouse_position;
+extern SDL_Point g_mouse_position;
 
 extern const char *arrow[];
 

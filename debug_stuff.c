@@ -4,7 +4,8 @@
 
 #include "hero.h"
 
-void Hero_DebugDrawWeirdGradient(SDL_Surface *surface, int xoffset, int yoffset) {
+void Hero_DebugDrawWeirdGradient(SDL_Surface *surface, int xoffset,
+                                 int yoffset) {
     SDL_LockSurface(surface);
     Uint8 *row = (Uint8 *) surface->pixels;
 
@@ -28,7 +29,7 @@ void Hero_DebugDrawWeirdGradient(SDL_Surface *surface, int xoffset, int yoffset)
     SDL_UnlockSurface(surface);
 }
 
-void Hero_PlayTestSound(Hero_AudioDef audio_def) {
+void Hero_DebugPlayTestSound(Hero_AudioDef audio_def) {
     // Retain the position where we are in the audio test loop
     static Uint32 audio_step = 0;
     Uint32 tone_hz = 220;
@@ -62,4 +63,26 @@ void Hero_PlayTestSound(Hero_AudioDef audio_def) {
     }
 }
 
+void Hero_RenderPlayer(SDL_Surface *buffer, int playerx, int playery) {
+    int top = playery;
+    int bottom = playery + 10;
+    Uint32 color = 0xFAFFFFFF;
+    Uint8 *end_of_buffer = (Uint8 *) buffer->pixels +
+                           buffer->format->BytesPerPixel * buffer->w +
+                           buffer->pitch *
+                           buffer->h;
+
+    for (int x = playerx; x < playerx + 10; ++x) {
+        Uint8 *pixel = ((Uint8 *) buffer->pixels
+                        + x * buffer->format->BytesPerPixel
+                        + top * buffer->pitch);
+
+        for (int y = top; y < bottom; ++y) {
+            if (pixel >= buffer->pixels && pixel < end_of_buffer) {
+                *(Uint32 *) pixel = color;
+                pixel += buffer->pitch;
+            }
+        }
+    }
+}
 

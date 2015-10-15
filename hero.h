@@ -13,6 +13,7 @@
 #define log_debug(...) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
 
 #include "globals.h"
+#include "logic.h"
 #include "platform.h"
 #include "debug_stuff.h"
 

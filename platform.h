@@ -9,10 +9,9 @@ Hero_AudioDef Hero_InitAudio();
 
 SDL_Cursor *Hero_InitSystemCursor(const char **image);
 
-void Hero_UpdateGameState(Hero_GameState *game_state,
-                          Hero_GameInput *game_input);
 
-void Hero_ResizeAndUpdateWindow(SDL_Window *window, SDL_Surface *surface);
+void Hero_ResizeAndUpdateWindow(SDL_Window *window, SDL_Surface *surface,
+                                SDL_bool forceStretch);
 
 void Hero_InitControllers();
 

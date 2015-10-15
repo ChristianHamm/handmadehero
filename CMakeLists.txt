@@ -7,14 +7,16 @@ set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} ")
 
 set(SOURCE_FILES
-    hero.c
-    platform.c
-    globals.c
     debug_stuff.c
+    globals.c
+    hero.c
+    logic.c
+    platform.c
     )
 
 set(LOGIC_SOURCE_FILES
     debug_stuff.c
+    logic.c
 )
 
 include_directories(${SDL_INCLUDE_DIR})
@@ -29,4 +31,4 @@ add_definitions(-Wunused-variable)
 
 add_executable(hero ${SOURCE_FILES})
 
-add_library(herologic  MODULE ${LOGIC_SOURCE_FILES})
+add_library(herologic  MODULE ${LOGIC_SOURCE_FILES} )

@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
     // Get the window surface, make a copy of it and update the window
     SDL_Surface *source = SDL_GetWindowSurface(window);
     g_backbuffer = SDL_ConvertSurfaceFormat(source, source->format->format, 0);
-    Hero_ResizeAndUpdateWindow(window, g_backbuffer);
+    Hero_ResizeAndUpdateWindow(window, g_backbuffer, SDL_TRUE);
     SDL_FreeSurface(source);
 
     // Loop things
@@ -63,8 +63,10 @@ int main(int argc, char **argv) {
     Hero_GameState *game_state = SDL_malloc(sizeof(Hero_GameState));
     SDL_zerop(game_state);
 
-    int xoffset = 0;
-    int yoffset = 0;
+    game_state->gradient_xoffset = 0;
+    game_state->gradient_yoffset = 0;
+    game_state->player_x = 100;
+    game_state->player_y = 100;
 
     while (running) {
         // Performance
@@ -87,25 +89,15 @@ int main(int argc, char **argv) {
 
         // Actual game stuff
         running = Hero_HandleEvents(game_input);
-        SDL_GetMouseState(&mouse_position.x, &mouse_position.y);
-        Hero_UpdateGameState(game_state, game_input);
+        SDL_GetMouseState(&g_mouse_position.x, &g_mouse_position.y);
+        Hero_UpdateGameState(game_state, game_input, g_backbuffer);
+        Hero_ResizeAndUpdateWindow(window, g_backbuffer, SDL_FALSE);
+        Hero_DebugPlayTestSound(audio_def);
 
-        xoffset -= 4 * game_input->left;
-        xoffset += 4 * game_input->right;
-        yoffset -= 4 * game_input->up;
-        yoffset += 4 * game_input->down;
-
-        Hero_DebugDrawWeirdGradient(g_backbuffer, xoffset, yoffset);
-        Hero_ResizeAndUpdateWindow(window, g_backbuffer);
-        // Playing test sound
-        //Hero_PlayTestSound(audio_def);
-
-        /*
         if (!sound_is_playing) {
             SDL_PauseAudioDevice(g_audio_device, 1);
-            sound_is_playing = SDL_FALSE;
+            sound_is_playing = SDL_TRUE;
         }
-         */
 
         // Performance
         Uint64 perf_counter_end = SDL_GetPerformanceCounter();
@@ -120,7 +112,7 @@ int main(int argc, char **argv) {
         if (fps_padding_time > 0)
             SDL_Delay((Uint32) fps_padding_time);
 
-        if ((frame_step % 320) == 0)
+        if ((frame_step % 240) == 0)
             log_debug("Frame stats: %f ms, max %f ms, padding %f ms",
                       perf_per_frame, k_display_msmax, fps_padding_time);
 
