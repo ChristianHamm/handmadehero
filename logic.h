@@ -9,7 +9,6 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
                           Hero_GameInput *game_input,
                           SDL_Surface *buffer);
 
-void Hero_DrawRectangle(SDL_Surface *buffer, float minx, float miny, float maxy,
-                        float maxx);
+Sint32 Hero_RoundFloatToInt32(float x);
 
 #endif //HERO_LOGIC_H

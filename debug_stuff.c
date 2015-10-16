@@ -63,7 +63,7 @@ void Hero_DebugPlayTestSound(Hero_AudioDef audio_def) {
     }
 }
 
-void Hero_RenderPlayer(SDL_Surface *buffer, int playerx, int playery) {
+void Hero_DebugRenderPlayer(SDL_Surface *buffer, int playerx, int playery) {
     int top = playery;
     int bottom = playery + 10;
     Uint32 color = 0xFAFFFFFF;
@@ -86,3 +86,37 @@ void Hero_RenderPlayer(SDL_Surface *buffer, int playerx, int playery) {
     }
 }
 
+void Hero_DebugDrawRectangle(SDL_Surface *buffer,
+                             float fmin_x, float fmin_y,
+                             float fmax_y, float fmax_x,
+                             Uint32 color) {
+
+    Sint32 min_x = Hero_RoundFloatToInt32(fmin_x);
+    Sint32 min_y = Hero_RoundFloatToInt32(fmin_y);
+    Sint32 max_x = Hero_RoundFloatToInt32(fmax_x);
+    Sint32 max_y = Hero_RoundFloatToInt32(fmax_y);
+
+    if (min_x < 0)
+        min_x = 0;
+    if (min_y < 0)
+        min_y = 0;
+    if (max_x > buffer->w)
+        max_x = buffer->w;
+    if (max_y > buffer->h)
+        max_y = buffer->h;
+
+    Uint8 *row = (Uint8 *) buffer->pixels +
+                 min_x * buffer->format->BytesPerPixel +
+                 min_y * buffer->pitch;
+
+    for (int y = min_y; y < max_y; ++y) {
+        Uint32 *pixel = (Uint32 *) row;
+
+        for (int x = min_x; x < max_x; ++x) {
+            *pixel++ = color;
+        }
+
+        row += buffer->pitch;
+    }
+
+}

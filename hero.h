@@ -4,6 +4,8 @@
 #ifndef HERO_HERO_H
 #define HERO_HERO_H
 
+#define HERO_DYNLOAD
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>

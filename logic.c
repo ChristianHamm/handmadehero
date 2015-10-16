@@ -39,30 +39,32 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
     game_state->gradient_yoffset += 1 * game_input->down;
 
 
+    Hero_DebugDrawRectangle(buffer, 0.0f, 0.0f, (float) buffer->h,
+                            (float) buffer->w, 0x0);
+    Hero_DebugDrawRectangle(buffer,
+                            40.0f + (float)game_state->gradient_yoffset,
+                            40.0f + (float)game_state->gradient_yoffset,
+                            50.0f,
+                            50.0f,
+                            0x000000FF);
+    Hero_DebugDrawRectangle(buffer,
+                            40.0f,
+                            50.0f,
+                            60.0f + (float)game_state->gradient_yoffset,
+                            50.0f + (float)game_state->gradient_yoffset,
+                            0x00FF0000);
+    Hero_DebugDrawRectangle(buffer,
+                            60.0f - (float)game_state->gradient_yoffset,
+                            60.0f + (float)game_state->gradient_yoffset,
+                            100.0f,
+                            100.0f,
+                            0x0000FF00);
+    //Hero_DebugDrawWeirdGradient(buffer, game_state->gradient_xoffset,
+    //                            game_state->gradient_yoffset);
+
 }
 
-void Hero_DrawRectangle(SDL_Surface *buffer, float minx, float miny, float maxy,
-                        float maxx) {
-    /* Handmade Hero Day 027 - 51:33
-     * https://youtu.be/Mi98zVBb6Wk?t=51m29s
-    int top = playery;
-    int bottom = playery + 10;
-    Uint32 color = 0xFAFFFFFF;
-    Uint8 *end_of_buffer = (Uint8 *) buffer->pixels +
-                           buffer->format->BytesPerPixel * buffer->w +
-                           buffer->pitch *
-                           buffer->h;
-
-    for (int x = playerx; x < playerx + 10; ++x) {
-        Uint8 *pixel = ((Uint8 *) buffer->pixels
-                        + x * buffer->format->BytesPerPixel
-                        + top * buffer->pitch);
-
-        for (int y = top; y < bottom; ++y) {
-            if (pixel >= buffer->pixels && pixel < end_of_buffer) {
-                *(Uint32 *) pixel = color;
-                pixel += buffer->pitch;
-            }
-        }
-    }*/
+Sint32 Hero_RoundFloatToInt32(float x) {
+    return (Sint32) (x + 0.5f);
 }
+

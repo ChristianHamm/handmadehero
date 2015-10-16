@@ -11,10 +11,12 @@
 
 // Dynamic loading of functions
 #ifdef HERO_DYNLOAD
-typedef void *(*_Hero_PlayTestSound)(Hero_AudioDef audio_def);
+//typedef void *(*_Hero_PlayTestSound)(Hero_AudioDef audio_def);
 
-typedef void *(*_Hero_DebugDrawRunningPixel)(SDL_Renderer *renderer,
-                                             Hero_GameState *game_state);
+typedef void *(*_Hero_UpdateGameState)(Hero_GameState *game_state,
+                                       Hero_GameInput *game_input,
+                                       SDL_Surface *buffer);
+
 #endif
 
 int main(int argc, char **argv) {
@@ -50,11 +52,9 @@ int main(int argc, char **argv) {
 
 #ifdef HERO_DYNLOAD
     g_logic_lib = SDL_LoadObject("libherologic.so");
-    _Hero_PlayTestSound Hero_PlayTestSound = SDL_LoadFunction(g_logic_lib,
-                                                              "Hero_PlayTestSound");
-    _Hero_DebugDrawRunningPixel Hero_DebugDrawRunningPixel = SDL_LoadFunction(
+    _Hero_UpdateGameState Hero_UpdateGameState = SDL_LoadFunction(
             g_logic_lib,
-            "Hero_DebugDrawRunningPixel");
+            "Hero_UpdateGameState");
 #endif
 
     Hero_GameInput *game_input = SDL_malloc(sizeof(Hero_GameInput));
@@ -75,15 +75,12 @@ int main(int argc, char **argv) {
 
 #ifdef HERO_DYNLOAD
         // Load our library every n frames
-        if ((frame_step % 120) == 0) {
+        if ((frame_step % 30) == 0) {
             SDL_UnloadObject(g_logic_lib);
-            log_debug("reloading symbols");
+            //log_debug("reloading symbols");
             g_logic_lib = SDL_LoadObject("libherologic.so");
-            Hero_PlayTestSound = SDL_LoadFunction(g_logic_lib,
-                                                  "Hero_PlayTestSound");
-            Hero_DebugDrawRunningPixel = SDL_LoadFunction(
-                    g_logic_lib,
-                    "Hero_DebugDrawRunningPixel");
+            Hero_UpdateGameState = SDL_LoadFunction(g_logic_lib,
+                                                    "Hero_UpdateGameState");
         }
 #endif
 
