@@ -4,15 +4,10 @@
 #ifndef HERO_HERO_H
 #define HERO_HERO_H
 
-#define HERO_DYNLOAD
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <sys/mman.h>
 #include <SDL.h>
 
 #define log_debug(...) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
+#define HERO_DYNLOAD
 
 #include "globals.h"
 #include "logic.h"

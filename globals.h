@@ -48,11 +48,13 @@ typedef struct _Hero_GameInput {
     int btnb;
     int btnx;
     int btny;
+
+    float frame_dt;
 } Hero_GameInput;
 
 typedef struct _Hero_GameState {
-    int player_x;
-    int player_y;
+    float player_x;
+    float player_y;
 
     int gradient_xoffset;
     int gradient_yoffset;
@@ -73,6 +75,23 @@ typedef struct _Hero_RecordedInput {
     int input_count;
     Hero_GameInput *input_stream;
 } Hero_RecordedInput;
+
+typedef struct _Hero_TileMap {
+    Sint32 count_x;
+    Sint32 count_y;
+    float upper_left_x;
+    float upper_left_y;
+    float tile_width;
+    float tile_height;
+
+    Uint32 *tiles;
+} Hero_TileMap;
+
+typedef struct _Hero_World {
+    Sint32 count_x;
+    Sint32 count_y;
+    Hero_TileMap *tile_maps;
+} Hero_World;
 
 extern SDL_Surface *g_backbuffer;
 

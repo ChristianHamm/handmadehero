@@ -21,7 +21,7 @@ typedef void *(*_Hero_UpdateGameState)(Hero_GameState *game_state,
 
 int main(int argc, char **argv) {
     // Init stuff
-    srand((unsigned int) time(NULL));
+    //srand((unsigned int) time(NULL));
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER);
     Hero_PrintSDLVersion();
 
@@ -65,8 +65,8 @@ int main(int argc, char **argv) {
 
     game_state->gradient_xoffset = 0;
     game_state->gradient_yoffset = 0;
-    game_state->player_x = 100;
-    game_state->player_y = 100;
+    game_state->player_x = 350;
+    game_state->player_y = 300;
 
     while (running) {
         // Performance
@@ -105,6 +105,8 @@ int main(int argc, char **argv) {
 
         // Ensure we are at a constant framerate
         double fps_padding_time = k_display_msmax - perf_per_frame;
+        // Save the value for movement speed adjustment
+        game_input->frame_dt = (float) fps_padding_time * 0.01f;
 
         if (fps_padding_time > 0)
             SDL_Delay((Uint32) fps_padding_time);

@@ -63,38 +63,17 @@ void Hero_DebugPlayTestSound(Hero_AudioDef audio_def) {
     }
 }
 
-void Hero_DebugRenderPlayer(SDL_Surface *buffer, int playerx, int playery) {
-    int top = playery;
-    int bottom = playery + 10;
-    Uint32 color = 0xFAFFFFFF;
-    Uint8 *end_of_buffer = (Uint8 *) buffer->pixels +
-                           buffer->format->BytesPerPixel * buffer->w +
-                           buffer->pitch *
-                           buffer->h;
-
-    for (int x = playerx; x < playerx + 10; ++x) {
-        Uint8 *pixel = ((Uint8 *) buffer->pixels
-                        + x * buffer->format->BytesPerPixel
-                        + top * buffer->pitch);
-
-        for (int y = top; y < bottom; ++y) {
-            if (pixel >= buffer->pixels && pixel < end_of_buffer) {
-                *(Uint32 *) pixel = color;
-                pixel += buffer->pitch;
-            }
-        }
-    }
-}
-
 void Hero_DebugDrawRectangle(SDL_Surface *buffer,
                              float fmin_x, float fmin_y,
-                             float fmax_y, float fmax_x,
-                             Uint32 color) {
+                             float fmax_x, float fmax_y,
+                             float red,
+                             float green,
+                             float blue) {
 
-    Sint32 min_x = Hero_RoundFloatToInt32(fmin_x);
-    Sint32 min_y = Hero_RoundFloatToInt32(fmin_y);
-    Sint32 max_x = Hero_RoundFloatToInt32(fmax_x);
-    Sint32 max_y = Hero_RoundFloatToInt32(fmax_y);
+    Sint32 min_x = Hero_RoundFloatToSint32(fmin_x);
+    Sint32 min_y = Hero_RoundFloatToSint32(fmin_y);
+    Sint32 max_x = Hero_RoundFloatToSint32(fmax_x);
+    Sint32 max_y = Hero_RoundFloatToSint32(fmax_y);
 
     if (min_x < 0)
         min_x = 0;
@@ -104,6 +83,10 @@ void Hero_DebugDrawRectangle(SDL_Surface *buffer,
         max_x = buffer->w;
     if (max_y > buffer->h)
         max_y = buffer->h;
+
+    Uint32 color = Hero_RoundFloatToUint32(red * 255.0f) << 16
+                   | Hero_RoundFloatToUint32(green * 255.0f) << 8
+                   | Hero_RoundFloatToUint32(blue * 255.0f);
 
     Uint8 *row = (Uint8 *) buffer->pixels +
                  min_x * buffer->format->BytesPerPixel +

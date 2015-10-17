@@ -200,8 +200,8 @@ SDL_bool Hero_HandleEvents(Hero_GameInput *game_input) {
          */
 
         if (event.type == SDL_KEYDOWN && event.key.state == SDL_PRESSED) {
-            log_debug("Key down %d - %s", event.key.keysym.sym,
-                      SDL_GetKeyName(event.key.keysym.sym));
+//            log_debug("Key down %d - %s", event.key.keysym.sym,
+//                      SDL_GetKeyName(event.key.keysym.sym));
 
             switch (event.key.keysym.sym) {
                 case SDLK_d:
