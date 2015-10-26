@@ -2,8 +2,8 @@
 // Created by Christian Hamm on 15.10.15.
 //
 
-#include <stdbool.h>
 #include "hero.h"
+#include <smmintrin.h>
 
 #define TILE_MAP_HEIGHT 9
 #define TILE_MAP_WIDTH 17
@@ -108,9 +108,12 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
 
     Hero_TileMap *tile_map = &tile_maps[0][0];
 
-    float player_red = 1.0f;
-    float player_green = 1.0f;
-    float player_blue = 0.0f;
+    Hero_Color player_colors = {
+            .r = 1.0f,
+            .g = 1.0f,
+            .b = 0.0f
+    };
+
     float player_width = 0.75f * tile_map->tile_width;
     float player_height = tile_map->tile_height;
 
@@ -130,48 +133,97 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
     float player_top = game_state->player_y - player_height;
 
     // Clear the screen
-    Hero_DebugDrawRectangle(buffer, 0.0f, 0.0f, (float) buffer->w,
-                            (float) buffer->h, 1.0, 0.0, 0.0);
+    Hero_Dimensions clear_screen_dims = {
+            .min_x = 0.0f,
+            .min_y = 0.0f,
+            .max_x = (float) buffer->w,
+            .max_y = (float) buffer->h
+    };
+
+    Hero_Color clear_screen_color = {
+            .r = 1.0f,
+            .g = 0.0f,
+            .b = 0.0f
+    };
+
+    Hero_DebugDrawRectangle(buffer, clear_screen_dims, clear_screen_color);
 
     // Draw the tile map
     for (int row = 0; row < TILE_MAP_HEIGHT; ++row) {
         for (int column = 0; column < TILE_MAP_WIDTH; ++column) {
-            Uint32 tile_id = Hero_GetTileValueUnchecked(tile_map, column, row);
             float gray = 0.5f;
 
+            Uint32 tile_id = Hero_GetTileValueUnchecked(tile_map, column, row);
             if (tile_id == 1)
                 gray = 1.0f;
 
-            float min_x = tile_map->upper_left_x
-                          + ((float) column) * tile_map->tile_width;
-            float min_y = tile_map->upper_left_y +
-                          ((float) row) * tile_map->tile_height;
-            float max_x = min_x + tile_map->tile_width;
-            float max_y = min_y + tile_map->tile_height;
+            Hero_Dimensions tile_dims = {
+                    .min_x = tile_map->upper_left_x +
+                             ((float) column) * tile_map->tile_width,
+                    .min_y = tile_map->upper_left_y +
+                             ((float) row) * tile_map->tile_height,
+                    .max_x = tile_dims.min_x + tile_map->tile_width,
+                    .max_y = tile_dims.min_y + tile_map->tile_height
+            };
 
-            Hero_DebugDrawRectangle(buffer, min_x, min_y, max_x, max_y, gray,
-                                    gray, gray);
+            Hero_Color tile_color = {
+                    .r = gray,
+                    .g = gray,
+                    .b = gray
+            };
+
+            Hero_DebugDrawRectangle(buffer, tile_dims, tile_color);
         }
     }
 
     // Draw the player
-    Hero_DebugDrawRectangle(buffer,
-                            player_left,
-                            player_top,
-                            player_left + player_width,
-                            player_top + player_height,
-                            player_red, player_green, player_blue
-    );
+    Hero_Dimensions player_dims = {
+            .min_x = player_left,
+            .min_y = player_top,
+            .max_x = player_left + player_width,
+            .max_y = player_top + player_height
+    };
 
-
+    Hero_DebugDrawRectangle(buffer, player_dims, player_colors);
 }
 
-Sint32 Hero_RoundFloatToSint32(float x) {
-    return (Sint32) (x + 0.5f);
+Uint32 Hero_RoundFloatToUint32(const float x) {
+    float r;
+    __m128 src = _mm_set_ss(x);
+    __m128 dst = _mm_floor_ps(src);
+    _mm_store_ss(&r, dst);
+    return (Uint32) r;
 }
 
-Uint32 Hero_RoundFloatToUint32(float x) {
-    return (Uint32) (x + 0.5f);
+Hero_Dimensions Hero_RoundDimensions(Hero_Dimensions dims) {
+    float r[4];
+
+    __m128 src = _mm_setr_ps(dims.min_x, dims.min_y, dims.max_x, dims.max_y);
+    __m128 dst = _mm_floor_ps(src);
+    _mm_store_ps(r, dst);
+
+    Hero_Dimensions rdims = {
+            .min_x = r[0],
+            .min_y = r[1],
+            .max_x = r[2],
+            .max_y = r[3],
+    };
+
+    return rdims;
+}
+
+Uint32 Hero_GetRGBColorForFloat(const float red, const float green,
+                                const float blue, const float alpha) {
+    // multiply each float with 255 then round down
+    __m128 floorSrc = _mm_setr_ps(red, green, blue, alpha);
+    __m128 mulSrc = _mm_set_ps1(255.0f);
+    __m128 mulDst = _mm_mul_ps(floorSrc, mulSrc);
+    __m128 floorDst = _mm_floor_ps(mulDst);
+
+    float r[4];
+    _mm_store_ps(r, floorDst);
+
+    return (Uint32) r[0] << 16 | (Uint32) r[1] << 8 | (Uint32) r[2];
 }
 
 SDL_bool Hero_IsTileMapPointEmpty(Hero_TileMap *tile_map,

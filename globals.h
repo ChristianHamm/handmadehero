@@ -50,7 +50,8 @@ typedef struct _Hero_GameInput {
     int btny;
 
     float frame_dt;
-} Hero_GameInput;
+}
+        Hero_GameInput;
 
 typedef struct _Hero_GameState {
     float player_x;
@@ -92,6 +93,19 @@ typedef struct _Hero_World {
     Sint32 count_y;
     Hero_TileMap *tile_maps;
 } Hero_World;
+
+typedef struct _Hero_Color {
+    float r;
+    float g;
+    float b;
+} Hero_Color;
+
+typedef struct _Hero_Dimensions {
+    float min_x;
+    float min_y;
+    float max_x;
+    float max_y;
+} Hero_Dimensions;
 
 extern SDL_Surface *g_backbuffer;
 

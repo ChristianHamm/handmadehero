@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
         if (fps_padding_time > 0)
             SDL_Delay((Uint32) fps_padding_time);
 
-        if ((frame_step % 240) == 0)
+        if ((frame_step % 30) == 0)
             log_debug("Frame stats: %f ms, max %f ms, padding %f ms",
                       perf_per_frame, k_display_msmax, fps_padding_time);
 

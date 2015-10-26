@@ -63,17 +63,13 @@ void Hero_DebugPlayTestSound(Hero_AudioDef audio_def) {
     }
 }
 
-void Hero_DebugDrawRectangle(SDL_Surface *buffer,
-                             float fmin_x, float fmin_y,
-                             float fmax_x, float fmax_y,
-                             float red,
-                             float green,
-                             float blue) {
-
-    Sint32 min_x = Hero_RoundFloatToSint32(fmin_x);
-    Sint32 min_y = Hero_RoundFloatToSint32(fmin_y);
-    Sint32 max_x = Hero_RoundFloatToSint32(fmax_x);
-    Sint32 max_y = Hero_RoundFloatToSint32(fmax_y);
+void Hero_DebugDrawRectangle(SDL_Surface *buffer, Hero_Dimensions dims,
+                             Hero_Color colors) {
+    Hero_Dimensions rdims = Hero_RoundDimensions(dims);
+    Sint32 min_x = (Sint32) rdims.min_x;
+    Sint32 min_y = (Sint32) rdims.min_y;
+    Sint32 max_x = (Sint32) rdims.max_x;
+    Sint32 max_y = (Sint32) rdims.max_y;
 
     if (min_x < 0)
         min_x = 0;
@@ -84,9 +80,8 @@ void Hero_DebugDrawRectangle(SDL_Surface *buffer,
     if (max_y > buffer->h)
         max_y = buffer->h;
 
-    Uint32 color = Hero_RoundFloatToUint32(red * 255.0f) << 16
-                   | Hero_RoundFloatToUint32(green * 255.0f) << 8
-                   | Hero_RoundFloatToUint32(blue * 255.0f);
+    Uint32 ucolor = Hero_GetRGBColorForFloat(colors.r, colors.g, colors.b,
+                                             0.0f);
 
     Uint8 *row = (Uint8 *) buffer->pixels +
                  min_x * buffer->format->BytesPerPixel +
@@ -96,7 +91,7 @@ void Hero_DebugDrawRectangle(SDL_Surface *buffer,
         Uint32 *pixel = (Uint32 *) row;
 
         for (int x = min_x; x < max_x; ++x) {
-            *pixel++ = color;
+            *pixel++ = ucolor;
         }
 
         row += buffer->pitch;

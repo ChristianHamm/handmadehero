@@ -27,7 +27,9 @@ add_definitions(-std=c11)
 add_definitions(-g)
 add_definitions(-Wall)
 add_definitions(-O0)
-add_definitions(-Wunused-variable)
+add_definitions(-msse4.2)
+add_definitions(-Wno-unused-variable)
+
 
 add_executable(hero ${SOURCE_FILES})
 

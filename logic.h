@@ -9,9 +9,12 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
                           Hero_GameInput *game_input,
                           SDL_Surface *buffer);
 
-Sint32 Hero_RoundFloatToSint32(float x);
+Uint32 Hero_RoundFloatToUint32(const float x);
 
-Uint32 Hero_RoundFloatToUint32(float x);
+Hero_Dimensions Hero_RoundDimensions(Hero_Dimensions dims);
+
+Uint32 Hero_GetRGBColorForFloat(const float red, const float green, const
+float blue, const float alpha);
 
 SDL_bool Hero_IsTileMapPointEmpty(Hero_TileMap *tile_map,
                                   float test_x, float test_y);

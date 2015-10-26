@@ -10,13 +10,8 @@ void Hero_DebugDrawWeirdGradient(SDL_Surface *surface, int xoffset,
 
 void Hero_DebugPlayTestSound(Hero_AudioDef audio_def);
 
-void Hero_DebugRenderPlayer(SDL_Surface *buffer, int playerx, int playery);
-
 void Hero_DebugDrawRectangle(SDL_Surface *buffer,
-                             float fmin_x, float fmin_y,
-                             float fmax_x, float fmax_y,
-                             float red,
-                             float green,
-                             float blue);
+                             Hero_Dimensions dims,
+                             Hero_Color colors);
 
 #endif //HERO_DEBUG_STUFF_H
