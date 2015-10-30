@@ -63,8 +63,6 @@ int main(int argc, char **argv) {
     Hero_GameState *game_state = SDL_malloc(sizeof(Hero_GameState));
     SDL_zerop(game_state);
 
-    game_state->gradient_xoffset = 0;
-    game_state->gradient_yoffset = 0;
     game_state->player_x = 350;
     game_state->player_y = 300;
 

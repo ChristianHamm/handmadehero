@@ -54,11 +54,12 @@ typedef struct _Hero_GameInput {
         Hero_GameInput;
 
 typedef struct _Hero_GameState {
+    Sint32 tile_map_count_x;
+    Sint32 tile_map_count_y;
+
     float player_x;
     float player_y;
 
-    int gradient_xoffset;
-    int gradient_yoffset;
 } Hero_GameState;
 
 // TODO(cha) I don't know if we need this
@@ -78,21 +79,29 @@ typedef struct _Hero_RecordedInput {
 } Hero_RecordedInput;
 
 typedef struct _Hero_TileMap {
+    Uint32 *tiles;
+} Hero_TileMap;
+
+typedef struct _Hero_World {
+    Sint32 tilemap_count_x;
+    Sint32 tilemap_count_y;
     Sint32 count_x;
     Sint32 count_y;
     float upper_left_x;
     float upper_left_y;
     float tile_width;
     float tile_height;
-
-    Uint32 *tiles;
-} Hero_TileMap;
-
-typedef struct _Hero_World {
-    Sint32 count_x;
-    Sint32 count_y;
     Hero_TileMap *tile_maps;
 } Hero_World;
+
+typedef struct _Hero_WorldPosition {
+    Sint32 tilemap_x;
+    Sint32 tilemap_y;
+    Sint32 tile_x;
+    Sint32 tile_y;
+    float x;
+    float y;
+} Hero_WorldPosition;
 
 typedef struct _Hero_Color {
     float r;
