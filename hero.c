@@ -47,8 +47,8 @@ int main(int argc, char **argv) {
     Uint32 frame_step = 0;
     SDL_bool running = SDL_TRUE;
 
-    SDL_SetCursor(Hero_InitSystemCursor(arrow));
-    SDL_ShowCursor(SDL_ENABLE);
+    //SDL_SetCursor(Hero_InitSystemCursor(arrow));
+    //SDL_ShowCursor(SDL_ENABLE);
 
 #ifdef HERO_DYNLOAD
     g_logic_lib = SDL_LoadObject("libherologic.so");
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
 
         // Actual game stuff
         running = Hero_HandleEvents(game_input);
-        SDL_GetMouseState(&g_mouse_position.x, &g_mouse_position.y);
+        //SDL_GetMouseState(&g_mouse_position.x, &g_mouse_position.y);
         Hero_UpdateGameState(game_state, game_input, g_backbuffer);
         Hero_ResizeAndUpdateWindow(window, g_backbuffer, SDL_FALSE);
         Hero_DebugPlayTestSound(audio_def);
