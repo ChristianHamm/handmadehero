@@ -83,14 +83,14 @@ typedef struct _Hero_TileMap {
 } Hero_TileMap;
 
 typedef struct _Hero_World {
+    float tile_size_in_meters;
+    Sint32 tile_side_in_pixels;
     Sint32 tilemap_count_x;
     Sint32 tilemap_count_y;
     Sint32 count_x;
     Sint32 count_y;
     float upper_left_x;
     float upper_left_y;
-    float tile_width;
-    float tile_height;
     Hero_TileMap *tile_maps;
 } Hero_World;
 

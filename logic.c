@@ -53,10 +53,10 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
     Uint32 tiles01[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X] = {
             {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
             {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
-            {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1},
-            {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0},
-            {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+            {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+            {1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1},
+            {1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0},
+            {1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
             {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
             {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
             {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -65,10 +65,10 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
     Uint32 tiles10[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X] = {
             {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
             {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            {1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            {1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            {0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            {1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            {1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1},
+            {1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1},
+            {0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1},
+            {1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1},
             {1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
             {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
             {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -87,12 +87,13 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
     };
 
     Hero_World world;
+    world.tile_size_in_meters = 1.4f;
+    world.tile_side_in_pixels = 60;
     world.tilemap_count_x = 2;
     world.tilemap_count_y = 2;
     world.upper_left_x = -30;
     world.upper_left_y = 0;
-    world.tile_width = 60;
-    world.tile_height = 60;
+    world.tile_side_in_pixels = 60;
     world.count_x = TILE_MAP_COUNT_X;
     world.count_y = TILE_MAP_COUNT_Y;
 
@@ -106,8 +107,8 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
 
     Hero_Color player_colors = {.r = 1.0f, .g = 1.0f, .b = 0.0f};
 
-    float player_width = 0.75f * world.tile_width;
-    float player_height = world.tile_height;
+    float player_width = 0.75f * world.tile_side_in_pixels;
+    float player_height = world.tile_side_in_pixels;
 
     Hero_TileMap *tile_map = Hero_GetTileMap(&world,
                                              game_state->tile_map_count_x,
@@ -138,10 +139,10 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
         game_state->tile_map_count_y = can_pos.tilemap_y;
 
         game_state->player_x = world.upper_left_x
-                               + world.tile_width * can_pos.tile_x
+                               + world.tile_side_in_pixels * can_pos.tile_x
                                + can_pos.x;
         game_state->player_y = world.upper_left_y
-                               + world.tile_height * can_pos.tile_y
+                               + world.tile_side_in_pixels * can_pos.tile_y
                                + can_pos.y;
     }
 
@@ -170,11 +171,11 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
 
             Hero_Dimensions tile_dims = {
                     .min_x = world.upper_left_x +
-                             ((float) column) * world.tile_width,
+                             ((float) column) * world.tile_side_in_pixels,
                     .min_y = world.upper_left_y +
-                             ((float) row) * world.tile_height,
-                    .max_x = tile_dims.min_x + world.tile_width,
-                    .max_y = tile_dims.min_y + world.tile_height
+                             ((float) row) * world.tile_side_in_pixels,
+                    .max_x = tile_dims.min_x + world.tile_side_in_pixels,
+                    .max_y = tile_dims.min_y + world.tile_side_in_pixels
             };
 
             Hero_Color tile_color = {.r = gray, .g = gray, .b = gray};
@@ -198,6 +199,7 @@ inline Uint32 Hero_RoundFloatToUint32(const float x) {
     __m128 src = _mm_set_ss(x);
     __m128 dst = _mm_floor_ps(src);
     _mm_store_ss(&r, dst);
+
     return (Uint32) r;
 }
 
@@ -257,16 +259,18 @@ inline Hero_WorldPosition Hero_GetCannonicalLocation(Hero_World *world,
     float x = test_pos.x - world->upper_left_x;
     float y = test_pos.y - world->upper_left_y;
 
-    result.tile_x = (Sint32) Hero_RoundFloatToUint32(x / world->tile_width);
-    result.tile_y = (Sint32) Hero_RoundFloatToUint32(y / world->tile_height);
+    result.tile_x = (Sint32) Hero_RoundFloatToUint32(
+            x / world->tile_side_in_pixels);
+    result.tile_y = (Sint32) Hero_RoundFloatToUint32(
+            y / world->tile_side_in_pixels);
 
-    result.x = x - result.tile_x * world->tile_width;
-    result.y = y - result.tile_y * world->tile_height;
+    result.x = x - result.tile_x * world->tile_side_in_pixels;
+    result.y = y - result.tile_y * world->tile_side_in_pixels;
 
     SDL_assert(result.x >= 0);
     SDL_assert(result.y >= 0);
-    SDL_assert(result.x < world->tile_width);
-    SDL_assert(result.y < world->tile_height);
+    SDL_assert(result.x < world->tile_side_in_pixels);
+    SDL_assert(result.y < world->tile_side_in_pixels);
 
     if (result.tile_x < 0) {
         result.tile_x += world->count_x;
