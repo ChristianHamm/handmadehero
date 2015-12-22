@@ -50,17 +50,7 @@ typedef struct _Hero_GameInput {
     int btny;
 
     float frame_dt;
-}
-        Hero_GameInput;
-
-typedef struct _Hero_GameState {
-    Sint32 tile_map_count_x;
-    Sint32 tile_map_count_y;
-
-    float player_x;
-    float player_y;
-
-} Hero_GameState;
+} Hero_GameInput;
 
 // TODO(cha) I don't know if we need this
 typedef struct _Hero_GameMemory {
@@ -83,7 +73,8 @@ typedef struct _Hero_TileMap {
 } Hero_TileMap;
 
 typedef struct _Hero_World {
-    float tile_size_in_meters;
+    float tile_side_in_meters;
+    float meters_to_pixels;
     Sint32 tile_side_in_pixels;
     Sint32 tilemap_count_x;
     Sint32 tilemap_count_y;
@@ -91,17 +82,27 @@ typedef struct _Hero_World {
     Sint32 count_y;
     float upper_left_x;
     float upper_left_y;
-    Hero_TileMap *tile_maps;
+    Hero_TileMap *tilemaps;
 } Hero_World;
 
+// canonical_position from Casey
 typedef struct _Hero_WorldPosition {
+#if 1
     Sint32 tilemap_x;
     Sint32 tilemap_y;
     Sint32 tile_x;
     Sint32 tile_y;
-    float x;
-    float y;
+#else
+    Uint32 _tile_x;
+    Uint32 _tile_y;
+#endif
+    float tile_rel_x;  // TileRelX
+    float tile_rel_y;  // TileRelY
 } Hero_WorldPosition;
+
+typedef struct _Hero_GameState {
+    Hero_WorldPosition player_position;
+} Hero_GameState;
 
 typedef struct _Hero_Color {
     float r;

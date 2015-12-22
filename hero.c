@@ -57,14 +57,19 @@ int main(int argc, char **argv) {
             "Hero_UpdateGameState");
 #endif
 
+    // Game Setup
     Hero_GameInput *game_input = SDL_malloc(sizeof(Hero_GameInput));
     SDL_zerop(game_input);
 
     Hero_GameState *game_state = SDL_malloc(sizeof(Hero_GameState));
     SDL_zerop(game_state);
 
-    game_state->player_x = 350;
-    game_state->player_y = 300;
+    game_state->player_position.tilemap_x = 0;
+    game_state->player_position.tilemap_y = 0;
+    game_state->player_position.tile_x = 3;
+    game_state->player_position.tile_y = 3;
+    game_state->player_position.tile_rel_x = 5.0f;
+    game_state->player_position.tile_rel_y = 5.0f;
 
     while (running) {
         // Performance
