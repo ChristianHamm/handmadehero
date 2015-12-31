@@ -203,6 +203,7 @@ SDL_bool Hero_HandleEvents(Hero_GameInput *game_input) {
 //            log_debug("Key down %d - %s", event.key.keysym.sym,
 //                      SDL_GetKeyName(event.key.keysym.sym));
 
+            // Up and down are flipped!
             switch (event.key.keysym.sym) {
                 case SDLK_d:
                 case SDLK_RIGHT:
@@ -216,13 +217,13 @@ SDL_bool Hero_HandleEvents(Hero_GameInput *game_input) {
                     break;
                 case SDLK_w:
                 case SDLK_UP:
-                    game_input->up = 1;
-                    game_input->down = 0;
+                    game_input->up = 0;
+                    game_input->down = 1;
                     break;
                 case SDLK_s:
                 case SDLK_DOWN:
-                    game_input->up = 0;
-                    game_input->down = 1;
+                    game_input->up = 1;
+                    game_input->down = 0;
                     break;
                 default:
                     break;
@@ -241,11 +242,11 @@ SDL_bool Hero_HandleEvents(Hero_GameInput *game_input) {
                     break;
                 case SDLK_w:
                 case SDLK_UP:
-                    game_input->up = 0;
+                    game_input->down = 0;
                     break;
                 case SDLK_s:
                 case SDLK_DOWN:
-                    game_input->down = 0;
+                    game_input->up = 0;
                 default:
                     break;
             }

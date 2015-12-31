@@ -68,36 +68,40 @@ typedef struct _Hero_RecordedInput {
     Hero_GameInput *input_stream;
 } Hero_RecordedInput;
 
-typedef struct _Hero_TileMap {
+typedef struct _Hero_TileChunk {
     Uint32 *tiles;
-} Hero_TileMap;
+} Hero_TileChunk;
 
 typedef struct _Hero_World {
+    Uint32 chunk_shift;
+    Uint32 chunk_mask;
+    Uint32 chunk_dim;
+
     float tile_side_in_meters;
     float meters_to_pixels;
     Sint32 tile_side_in_pixels;
-    Sint32 tilemap_count_x;
-    Sint32 tilemap_count_y;
-    Sint32 count_x;
-    Sint32 count_y;
-    float upper_left_x;
-    float upper_left_y;
-    Hero_TileMap *tilemaps;
+
+    // TODO(casey): Beginner's sparseness
+    Sint32 tile_chunk_count_x;
+    Sint32 tile_chunk_count_y;
+
+    Hero_TileChunk *tile_chunks;
 } Hero_World;
+
+typedef struct _Hero_TileChunkPosition {
+    Uint32 tile_chunk_x;
+    Uint32 tile_chunk_y;
+
+    Uint32 rel_tile_x;
+    Uint32 rel_tile_y;
+} Hero_TileChunkPosition;
 
 // canonical_position from Casey
 typedef struct _Hero_WorldPosition {
-#if 1
-    Sint32 tilemap_x;
-    Sint32 tilemap_y;
-    Sint32 tile_x;
-    Sint32 tile_y;
-#else
-    Uint32 _tile_x;
-    Uint32 _tile_y;
-#endif
-    float tile_rel_x;  // TileRelX
-    float tile_rel_y;  // TileRelY
+    Uint32 abs_tile_x;
+    Uint32 abs_tile_y;
+    float tile_rel_x;
+    float tile_rel_y;
 } Hero_WorldPosition;
 
 typedef struct _Hero_GameState {
