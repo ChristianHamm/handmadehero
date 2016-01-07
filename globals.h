@@ -6,6 +6,7 @@
 #define HERO_GLOBALS_H
 
 #include <SDL.h>
+#include "tile.h"
 
 extern void *g_logic_lib;
 
@@ -68,47 +69,8 @@ typedef struct _Hero_RecordedInput {
     Hero_GameInput *input_stream;
 } Hero_RecordedInput;
 
-typedef struct _Hero_TileChunk {
-    Uint32 *tiles;
-} Hero_TileChunk;
-
-typedef struct _Hero_World {
-    Uint32 chunk_shift;
-    Uint32 chunk_mask;
-    Uint32 chunk_dim;
-
-    float tile_side_in_meters;
-    float meters_to_pixels;
-    Sint32 tile_side_in_pixels;
-
-    // TODO(casey): Beginner's sparseness
-    Sint32 tile_chunk_count_x;
-    Sint32 tile_chunk_count_y;
-
-    Hero_TileChunk *tile_chunks;
-} Hero_World;
-
-typedef struct _Hero_TileChunkPosition {
-    Uint32 tile_chunk_x;
-    Uint32 tile_chunk_y;
-
-    Uint32 rel_tile_x;
-    Uint32 rel_tile_y;
-} Hero_TileChunkPosition;
-
-// canonical_position from Casey
-typedef struct _Hero_WorldPosition {
-    // These are fixed point tile locations.
-    // The ghigh bits are the tile chunk index,
-    // and the low bits are the tile index in the chunk
-    Uint32 abs_tile_x;
-    Uint32 abs_tile_y;
-    float tile_rel_x;
-    float tile_rel_y;
-} Hero_WorldPosition;
-
 typedef struct _Hero_GameState {
-    Hero_WorldPosition player_position;
+    Hero_TilemapPosition player_position;
 } Hero_GameState;
 
 typedef struct _Hero_Color {
