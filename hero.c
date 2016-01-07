@@ -50,13 +50,6 @@ int main(int argc, char **argv) {
     //SDL_SetCursor(Hero_InitSystemCursor(arrow));
     //SDL_ShowCursor(SDL_ENABLE);
 
-#ifdef HERO_DYNLOAD
-    g_logic_lib = SDL_LoadObject("libherologic.so");
-    _Hero_UpdateGameState Hero_UpdateGameState = SDL_LoadFunction(
-            g_logic_lib,
-            "Hero_UpdateGameState");
-#endif
-
     // Game Setup
     Hero_GameInput *game_input = SDL_malloc(sizeof(Hero_GameInput));
     SDL_zerop(game_input);
@@ -73,6 +66,7 @@ int main(int argc, char **argv) {
         // Performance
         Uint64 perf_freq = SDL_GetPerformanceFrequency();
         Uint64 perf_counter_start = SDL_GetPerformanceCounter();
+        _Hero_UpdateGameState Hero_UpdateGameState;
 
 #ifdef HERO_DYNLOAD
         // Load our library every n frames
