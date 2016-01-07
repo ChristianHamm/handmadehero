@@ -98,6 +98,9 @@ typedef struct _Hero_TileChunkPosition {
 
 // canonical_position from Casey
 typedef struct _Hero_WorldPosition {
+    // These are fixed point tile locations.
+    // The ghigh bits are the tile chunk index,
+    // and the low bits are the tile index in the chunk
     Uint32 abs_tile_x;
     Uint32 abs_tile_y;
     float tile_rel_x;
