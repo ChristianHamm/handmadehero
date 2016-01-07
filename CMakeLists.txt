@@ -10,12 +10,13 @@ set(SOURCE_FILES
         hero.c
         logic.c
         platform.c
+        tile.c
         )
 
 set(LOGIC_SOURCE_FILES
         debug_stuff.c
         logic.c
-        )
+        tile.c)
 
 IF (APPLE)
     #SET(GUI_TYPE MACOSX_BUNDLE)
