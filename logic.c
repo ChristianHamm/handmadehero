@@ -132,9 +132,15 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
                 gray = 0.0f;
 
             float min_x =
-                    center_x + ((float) rel_col) * world.tile_side_in_pixels;
+                    center_x
+                    - world.meters_to_pixels
+                      * game_state->player_position.tile_rel_x
+                    + ((float) rel_col) * world.tile_side_in_pixels;
             float min_y =
-                    center_y - ((float) rel_row) * world.tile_side_in_pixels;
+                    center_y
+                    + world.meters_to_pixels
+                      * game_state->player_position.tile_rel_y
+                    - ((float) rel_row) * world.tile_side_in_pixels;
             float max_x = min_x + world.tile_side_in_pixels;
             float max_y = min_y - world.tile_side_in_pixels;
 
@@ -152,12 +158,10 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
 
     // Draw the player
     float draw_p_left = center_x
-                        + world.meters_to_pixels
-                          * game_state->player_position.tile_rel_x
+
                         - 0.5f * world.meters_to_pixels * player_width;
     float draw_p_top = center_y
-                       - world.meters_to_pixels
-                         * game_state->player_position.tile_rel_y
+
                        - world.meters_to_pixels * player_height;
 
     Hero_Dimensions player_dims = {
