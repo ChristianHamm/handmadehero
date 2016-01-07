@@ -51,6 +51,8 @@ int main(int argc, char **argv) {
     //SDL_ShowCursor(SDL_ENABLE);
 
     // Game Setup
+    _Hero_UpdateGameState Hero_UpdateGameState = NULL;
+
     Hero_GameInput *game_input = SDL_malloc(sizeof(Hero_GameInput));
     SDL_zerop(game_input);
 
@@ -66,11 +68,10 @@ int main(int argc, char **argv) {
         // Performance
         Uint64 perf_freq = SDL_GetPerformanceFrequency();
         Uint64 perf_counter_start = SDL_GetPerformanceCounter();
-        _Hero_UpdateGameState Hero_UpdateGameState;
 
 #ifdef HERO_DYNLOAD
         // Load our library every n frames
-        if ((frame_step % 30) == 0) {
+        if ((frame_step % 30) == 0 || Hero_UpdateGameState == NULL) {
             SDL_UnloadObject(g_logic_lib);
             //log_debug("reloading symbols");
             g_logic_lib = SDL_LoadObject("libherologic.so");
@@ -82,6 +83,7 @@ int main(int argc, char **argv) {
         // Actual game stuff
         running = Hero_HandleEvents(game_input);
         //SDL_GetMouseState(&g_mouse_position.x, &g_mouse_position.y);
+        SDL_assert(Hero_UpdateGameState);
         Hero_UpdateGameState(game_state, game_input, g_backbuffer);
         Hero_ResizeAndUpdateWindow(window, g_backbuffer, SDL_FALSE);
         Hero_DebugPlayTestSound(audio_def);
