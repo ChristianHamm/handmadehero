@@ -1,8 +1,7 @@
 //
 // Created by Christian Hamm on 26.04.15.
 
-#ifndef HERO_HERO_H
-#define HERO_HERO_H
+#pragma once
 
 #include <SDL.h>
 
@@ -14,4 +13,3 @@
 #include "platform.h"
 #include "debug_stuff.h"
 
-#endif //HERO_HERO_H

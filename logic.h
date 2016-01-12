@@ -2,8 +2,7 @@
 // Created by Christian Hamm on 15.10.15.
 //
 
-#ifndef HERO_LOGIC_H
-#define HERO_LOGIC_H
+#pragma once
 
 void Hero_UpdateGameState(Hero_GameState *game_state,
                           Hero_GameInput *game_input,
@@ -17,4 +16,3 @@ Uint32 Hero_GetRGBColorForFloat(const float red, const float green, const
 float blue, const float alpha);
 
 
-#endif //HERO_LOGIC_H

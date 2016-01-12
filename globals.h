@@ -2,8 +2,7 @@
 // Created by Christian Hamm on 26.04.15.
 //
 
-#ifndef HERO_GLOBALS_H
-#define HERO_GLOBALS_H
+#pragma once
 
 #include <SDL.h>
 #include "tile.h"
@@ -92,4 +91,3 @@ extern SDL_Point g_mouse_position;
 
 extern const char *arrow[];
 
-#endif //HERO_GLOBALS_H

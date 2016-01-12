@@ -2,8 +2,7 @@
 // Created by Christian Hamm on 08.01.16.
 //
 
-#ifndef HERO_TILE_H
-#define HERO_TILE_H
+#pragma once
 
 #include "globals.h"
 
@@ -80,4 +79,3 @@ Hero_TileChunkPosition Hero_GetChunkPositionFor(Hero_Map *world,
                                                 Uint32 abs_tile_y);
 
 
-#endif //HERO_TILE_H
