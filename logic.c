@@ -36,6 +36,7 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
 
     Hero_TileChunk tile_chunk = {.tiles = (Uint32 *) temp_tiles};
 
+
     // NOTE(casey): This is set to using 256x256 tile chunks.
     Hero_Map world = {
             .chunk_shift = 8,
@@ -45,8 +46,10 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
             .tile_chunk_count_y = 1,
             .tile_side_in_meters = 1.4f,
             .tile_side_in_pixels = 60,
-            .meters_to_pixels = (float) world.tile_side_in_pixels
-                                / world.tile_side_in_meters,
+            // Shut up -Wuninitialized warnings
+            //.meters_to_pixels = (float) world.tile_side_in_pixels
+            //                    / world.tile_side_in_meters,
+            .meters_to_pixels = 60.0f / 1.4f,
             .tile_chunks = &tile_chunk
     };
 
@@ -184,7 +187,7 @@ inline Uint32 Hero_RoundFloatToUint32(const float x) {
     return (Uint32) r;
 }
 
-inline Hero_Dimensions Hero_RoundDimensions(Hero_Dimensions dims) {
+inline Hero_Dimensions Hero_RoundDimensions(const Hero_Dimensions dims) {
     float r[4];
 
     __m128 src = _mm_setr_ps(dims.min_x, dims.min_y, dims.max_x, dims.max_y);
