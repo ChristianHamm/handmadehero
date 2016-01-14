@@ -10,7 +10,7 @@ typedef struct _Hero_TileChunk {
     Uint32 *tiles;
 } Hero_TileChunk;
 
-typedef struct _Hero_Map {
+typedef struct _Hero_Tilemap {
     Uint32 chunk_shift;
     Uint32 chunk_mask;
     Uint32 chunk_dim;
@@ -24,7 +24,7 @@ typedef struct _Hero_Map {
     Sint32 tile_chunk_count_y;
 
     Hero_TileChunk *tile_chunks;
-} Hero_Map;
+} Hero_Tilemap;
 
 typedef struct _Hero_TileChunkPosition {
     Uint32 tile_chunk_x;
@@ -46,35 +46,35 @@ typedef struct _Hero_TilemapPosition {
 } Hero_TilemapPosition;
 
 
-void Hero_RecanonicalizeCoord(Hero_Map *world,
+void Hero_RecanonicalizeCoord(Hero_Tilemap *tilemap,
                               Uint32 *tile,
                               float *tile_rel);
 
-Hero_TilemapPosition Hero_RecanonicalizePosition(Hero_Map *world,
+Hero_TilemapPosition Hero_RecanonicalizePosition(Hero_Tilemap *tilemap,
                                                  Hero_TilemapPosition pos);
 
-SDL_bool Hero_IsWorldPointEmpty(Hero_Map *world,
+SDL_bool Hero_IsWorldPointEmpty(Hero_Tilemap *tilemap,
                                 Hero_TilemapPosition test_pos);
 
 
-Uint32 Hero_GetTileValueUnchecked(Hero_Map *world,
+Uint32 Hero_GetTileValueUnchecked(Hero_Tilemap *tilemap,
                                   Hero_TileChunk *tile_chunk,
                                   Uint32 tile_x,
                                   Uint32 tile_y);
 
-Uint32 Hero_GetTileChunkValue(Hero_Map *world,
+Uint32 Hero_GetTileChunkValue(Hero_Tilemap *tilemap,
                               Uint32 abs_tile_x,
                               Uint32 abs_tile_y);
 
-Hero_TileChunk *Hero_GetTileChunk(Hero_Map *world, Sint32 tilemap_x,
+Hero_TileChunk *Hero_GetTileChunk(Hero_Tilemap *tilemap, Sint32 tilemap_x,
                                   Sint32 tilemap_y);
 
-Uint32 Hero_GetTileValue(Hero_Map *world,
+Uint32 Hero_GetTileValue(Hero_Tilemap *world,
                          Hero_TileChunk *tile_chunk,
                          Uint32 test_tile_x,
                          Uint32 test_tile_y);
 
-Hero_TileChunkPosition Hero_GetChunkPositionFor(Hero_Map *world,
+Hero_TileChunkPosition Hero_GetChunkPositionFor(Hero_Tilemap *tilemap,
                                                 Uint32 abs_tile_x,
                                                 Uint32 abs_tile_y);
 

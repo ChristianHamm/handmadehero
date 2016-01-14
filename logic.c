@@ -38,7 +38,8 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
 
 
     // NOTE(casey): This is set to using 256x256 tile chunks.
-    Hero_Map world = {
+    Hero_Tilemap world = {
+    Hero_Tilemap world = {
             .chunk_shift = 8,
             .chunk_mask = (1u << world.chunk_shift) - 1u,
             .chunk_dim = 256,
