@@ -8,3 +8,5 @@ cmake_install.cmake
 tags
 /sdl/SDL2.framework
 attic/*
+/data/handmade_hero_099_source
+/data/handmade_hero_199_source
