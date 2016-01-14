@@ -1,4 +1,7 @@
 hero
+libherologic.so
+Makefile
+cmake_install.cmake
 *.dSYM
 .DS_Store
 tags
