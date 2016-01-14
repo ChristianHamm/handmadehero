@@ -1,8 +1,10 @@
 hero
 libherologic.so
 Makefile
+/data/*.zip
 cmake_install.cmake
 *.dSYM
 .DS_Store
 tags
+/sdl/SDL2.framework
 attic/*
