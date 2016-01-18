@@ -39,7 +39,6 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
 
     // NOTE(casey): This is set to using 256x256 tile chunks.
     Hero_Tilemap world = {
-    Hero_Tilemap world = {
             .chunk_shift = 8,
             .chunk_mask = (1u << world.chunk_shift) - 1u,
             .chunk_dim = 256,
@@ -123,17 +122,21 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
 
     for (int rel_row = -10; rel_row < 10; ++rel_row) {
         for (int rel_col = -20; rel_col < 20; ++rel_col) {
-            float gray = 0.5f;
             Uint32 column = game_state->player_position.abs_tile_x + rel_col;
             Uint32 row = game_state->player_position.abs_tile_y + rel_row;
             Uint32 tile_id = Hero_GetTileChunkValue(&world, column, row);
 
-            if (tile_id == 1)
-                gray = 1.0f;
+            // Floor tiles
+            Hero_Color tile_color = {.r = 0.7f, .g = 0.5f, .b = 0.3f};
 
+            // Wall tiles
+            if (tile_id == 1)
+                tile_color = (Hero_Color) {.r = 0.0f, .g = 0.7f, .b = 0.4f};
+
+            // Current user floor tile
             if ((column == game_state->player_position.abs_tile_x) &&
                 (row == game_state->player_position.abs_tile_y))
-                gray = 0.0f;
+                tile_color = (Hero_Color) {.r = 0.0f, .g = 0.0f, .b = 0.0f};
 
             float min_x =
                     center_x
@@ -155,18 +158,13 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
                     .max_y = min_y,
             };
 
-            Hero_Color tile_color = {.r = gray, .g = gray, .b = gray};
             Hero_DebugDrawRectangle(buffer, tile_dims, tile_color);
         }
     }
 
     // Draw the player
-    float draw_p_left = center_x
-
-                        - 0.5f * world.meters_to_pixels * player_width;
-    float draw_p_top = center_y
-
-                       - world.meters_to_pixels * player_height;
+    float draw_p_left = center_x - 0.5f * world.meters_to_pixels * player_width;
+    float draw_p_top = center_y - world.meters_to_pixels * player_height;
 
     Hero_Dimensions player_dims = {
             .min_x = draw_p_left,
@@ -175,7 +173,7 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
             .min_y = draw_p_top
     };
 
-    Hero_Color player_colors = {.r = 1.0f, .g = 1.0f, .b = 0.0f};
+    Hero_Color player_colors = {.r = 1.0f, .g = 0.9f, .b = 0.0f};
     Hero_DebugDrawRectangle(buffer, player_dims, player_colors);
 }
 
