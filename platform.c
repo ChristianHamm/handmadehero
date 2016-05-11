@@ -17,15 +17,17 @@ Hero_AudioDef Hero_InitAudio() {
     g_desired_audio_spec.samples = (k_audio_freq *
                                     k_audio_bytes_per_sample /
                                     k_audio_rate);
-    g_audio_device = SDL_OpenAudioDevice(g_audio_device_name, 0,
+
+    g_audio_device = SDL_OpenAudioDevice(NULL, 0,
                                          &g_desired_audio_spec,
                                          &g_audio_spec,
                                          SDL_AUDIO_ALLOW_ANY_CHANGE);
 
-    if (g_audio_device == 0) {
+    if (g_audio_device <= 0) {
         log_debug("Failed to open audio: %s\n", SDL_GetError());
     } else {
-        log_debug("Opened audio device %s", g_audio_device_name);
+        g_audio_device_name = (char *) SDL_GetAudioDeviceName(g_audio_device, 0);
+        log_debug("Opened audio device '%s'", g_audio_device_name);
 
         if (g_audio_spec.format != g_desired_audio_spec.format)
             log_debug("Could not get desired audio format.\n");
@@ -73,7 +75,6 @@ SDL_Cursor *Hero_InitSystemCursor(const char **image) {
     sscanf(image[4 + row], "%d,%d", &hot_x, &hot_y);
     return SDL_CreateCursor(data, mask, 32, 32, hot_x, hot_y);
 }
-
 
 
 void Hero_InitControllers() {
