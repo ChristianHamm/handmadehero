@@ -15,7 +15,8 @@
 
 typedef void *(*_Hero_UpdateGameState)(Hero_GameState *game_state,
                                        Hero_GameInput *game_input,
-                                       SDL_Surface *buffer);
+                                       SDL_Surface *buffer,
+                                       Hero_AudioDef audio_def);
 
 #endif
 
@@ -84,12 +85,12 @@ int main(int argc, char **argv) {
         running = Hero_HandleEvents(game_input);
         //SDL_GetMouseState(&g_mouse_position.x, &g_mouse_position.y);
         SDL_assert(Hero_UpdateGameState);
-        Hero_UpdateGameState(game_state, game_input, g_backbuffer);
+        Hero_UpdateGameState(game_state, game_input, g_backbuffer, audio_def);
         Hero_ResizeAndUpdateWindow(window, g_backbuffer, SDL_FALSE);
-        Hero_DebugPlayTestSound(audio_def);
+        //Hero_DebugPlayTestSquareWave(audio_def);
 
         if (!sound_is_playing) {
-            SDL_PauseAudioDevice(g_audio_device, 1);
+            SDL_PauseAudioDevice(g_audio_device, 0);
             sound_is_playing = SDL_TRUE;
         }
 

@@ -4,6 +4,8 @@
 
 #include "hero.h"
 
+#define PI 3.14159265359
+
 void Hero_DebugDrawWeirdGradient(SDL_Surface *surface, int xoffset,
                                  int yoffset) {
     SDL_LockSurface(surface);
@@ -29,11 +31,10 @@ void Hero_DebugDrawWeirdGradient(SDL_Surface *surface, int xoffset,
     SDL_UnlockSurface(surface);
 }
 
-void Hero_DebugPlayTestSound(Hero_AudioDef audio_def) {
+void Hero_DebugPlayTestSquareWave(Hero_AudioDef audio_def, const Uint32 tone_hz,
+                                  const Sint16 tone_volume) {
     // Retain the position where we are in the audio test loop
     static Uint32 audio_step = 0;
-    Uint32 tone_hz = 220;
-    Sint16 tone_volume = 3000;
     Uint32 square_wave_period = audio_def.audio_freq / tone_hz;
     Uint32 half_square_wave_period = square_wave_period / 2;
 
@@ -57,6 +58,56 @@ void Hero_DebugPlayTestSound(Hero_AudioDef audio_def) {
             *sample_out++ = sample_value;
             *sample_out++ = sample_value;
         }
+        SDL_QueueAudio(audio_def.audio_device, sound_buffer,
+                       bytes_to_write);
+        free(sound_buffer);
+    }
+}
+
+void Hero_DebugPlayTestSineWave(Hero_AudioDef audio_def, const Uint32 tone_hz,
+                                const Sint16 tone_volume) {
+
+    static Uint32 wave_pos = 0;
+    Uint32 wave_period = audio_def.audio_freq / tone_hz;
+
+    Uint32 target_queue_bytes =
+            (Uint32) (audio_def.audio_freq *
+                      audio_def.audio_bytes_per_sample);
+    Uint32 bytes_to_write =
+            target_queue_bytes /4;// -
+    //SDL_GetQueuedAudioSize(audio_def.audio_device);
+
+    if (bytes_to_write) {
+        void *sound_buffer = malloc(bytes_to_write);
+        Sint16 *sample_out = (Sint16 *) sound_buffer;
+        Uint32 sample_count =
+                bytes_to_write / audio_def.audio_bytes_per_sample;
+        /*
+        log_debug("rate: %d", wave_period);
+        log_debug("bytes to write: %d", bytes_to_write);
+        log_debug("wave pos: %d", wave_pos);
+        log_debug("sample count: %d", sample_count);*/
+
+        for (Uint32 i = 0; i < sample_count; ++i) {
+            ++wave_pos;
+            Sint16 sample_value =
+                    (Sint16) (sin(wave_pos % wave_period
+                                  * (2 * PI / wave_period))
+                              * tone_volume);
+
+            Sint16 sample_value2 =
+                    (Sint16) (sin(wave_pos % wave_period
+                                  * (2 * PI / wave_period))
+                              * tone_volume);
+
+            *sample_out++ = sample_value;
+            *sample_out++ = sample_value;
+
+            if (wave_pos >= wave_period)
+                wave_pos = 0;
+        }
+
+
         SDL_QueueAudio(audio_def.audio_device, sound_buffer,
                        bytes_to_write);
         free(sound_buffer);

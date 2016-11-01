@@ -10,7 +10,9 @@
 
 void Hero_UpdateGameState(Hero_GameState *game_state,
                           Hero_GameInput *game_input,
-                          SDL_Surface *buffer) {
+                          SDL_Surface *buffer,
+                          Hero_AudioDef audio_def) {
+
 
     // Create the tile maps
     Uint32 temp_tiles[TILE_CHUNK_COUNT_Y][TILE_CHUNK_COUNT_X] = {
@@ -175,6 +177,11 @@ void Hero_UpdateGameState(Hero_GameState *game_state,
 
     Hero_Color player_colors = {.r = 1.0f, .g = 0.9f, .b = 0.0f};
     Hero_DebugDrawRectangle(buffer, player_dims, player_colors);
+
+    Sint16 debug_tone_volume = 1000;
+    Hero_DebugPlayTestSineWave(audio_def, 440, debug_tone_volume);
+    Hero_DebugPlayTestSineWave(audio_def, 220, debug_tone_volume);
+    Hero_DebugPlayTestSineWave(audio_def, 880, debug_tone_volume);
 }
 
 inline Uint32 Hero_RoundFloatToUint32(const float x) {

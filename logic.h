@@ -6,7 +6,8 @@
 
 void Hero_UpdateGameState(Hero_GameState *game_state,
                           Hero_GameInput *game_input,
-                          SDL_Surface *buffer);
+                          SDL_Surface *buffer,
+                          Hero_AudioDef audio_def);
 
 Uint32 Hero_RoundFloatToUint32(const float x);
 
