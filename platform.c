@@ -278,7 +278,6 @@ SDL_bool Hero_HandleEvents(Hero_GameInput *game_input) {
 
 void Hero_ResizeAndUpdateWindow(SDL_Window *window, SDL_Surface *surface,
                                 SDL_bool forceStretch) {
-    //log_debug("Hero_ResizeAndUpdateWindow");
     SDL_Surface *current_surface = SDL_GetWindowSurface(window);
 
     SDL_SoftStretch(surface, NULL, current_surface, NULL);
