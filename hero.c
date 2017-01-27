@@ -87,12 +87,22 @@ int main(int argc, char **argv) {
         SDL_assert(Hero_UpdateGameState);
         Hero_UpdateGameState(game_state, game_input, g_backbuffer, audio_def);
         Hero_ResizeAndUpdateWindow(window, g_backbuffer, SDL_FALSE);
+
+        // TODO: Sound
+        /*
+        Sint16 debug_tone_volume = 1000;
+        Hero_DebugPlayTestSineWave(audio_def, 440, debug_tone_volume);
+        Hero_DebugPlayTestSineWave(audio_def, 220, debug_tone_volume);
+        Hero_DebugPlayTestSineWave(audio_def, 880, debug_tone_volume);
+         */
+
         //Hero_DebugPlayTestSquareWave(audio_def);
 
+        /*
         if (!sound_is_playing) {
             SDL_PauseAudioDevice(g_audio_device, 0);
             sound_is_playing = SDL_TRUE;
-        }
+        }*/
 
         // Performance
         Uint64 perf_counter_end = SDL_GetPerformanceCounter();
